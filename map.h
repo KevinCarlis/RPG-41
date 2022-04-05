@@ -112,3 +112,22 @@ class Map {
 		init_map();
 	}
 };
+
+class BattleScreen {
+	static const size_t DISPLAY = 20; //Show a 20x20 area at a time
+	public:
+	void draw(/*Hero &hero*/) {
+		for (size_t i = 0; i < DISPLAY; i++) {
+			if (i != DISPLAY - 1)
+				mvaddch(0,i+1,'_');
+			mvaddch(DISPLAY,i,'_');
+			mvaddch(i+1,0,'|');
+			mvaddch(i+1,DISPLAY,'|');
+		}
+		int space = (DISPLAY - 6) / 7;
+		mvprintw(2+space*2, DISPLAY/2-3, "Attack");
+		mvprintw(3+space*3, DISPLAY/2-4, "Special_1");
+		mvprintw(4+space*4, DISPLAY/2-4, "Special_2");
+		mvprintw(5+space*5, DISPLAY/2-2, "Pass");
+	}
+};

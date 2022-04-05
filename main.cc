@@ -36,9 +36,10 @@ void turn_off_ncurses() {
 int main() {
 	turn_on_ncurses();
 	Map map;
-	BattleScreen fight;
 	int x = Map::SIZE / 2, y = Map::SIZE / 2; //Start in middle of the world
 	int old_x = -1, old_y = -1;
+	int money = 0;
+	bool battle = false;
 	while (true) {
 		int ch = getch(); // Wait for user input, with TIMEOUT delay
 		if (ch == 'q' || ch == 'Q') break;
@@ -51,25 +52,6 @@ int main() {
 			if (x < 0) x = 0;
 		}
 		else if (ch == UP) {
-			int option = 0, old_option=1;
-			while(true) {
-				ch = getch();
-				if (ch == DOWN) {
-					if (option < 3)
-						option++;
-				}
-				else if (ch == UP) {
-					if (option > 0)
-						option--;
-				}
-				if (option != old_option) {
-					clear();
-					fight.draw();
-					mvaddch(6 + option * 3, 4, '>');
-					refresh();
-					old_option = option;
-				}
-			}
 			y--;
 			if (y < 0) y = 0;
 		}
@@ -83,12 +65,48 @@ int main() {
 		//Stop flickering by only redrawing on a change
 		if (x != old_x or y != old_y) {
 			//clear(); //Put this in if the screen is getting corrupted
-			map.draw(x,y);
-			mvprintw(Map::DISPLAY+1,0,"X: %i Y: %i\n",x,y);
-			refresh();
+			if (map.getTile(x,y) == Map::MONSTER) {
+				battle = true;
+			}
+			if (map.getTile(x,y) == Map::TREASURE) {
+				map.setTile(x,y,Map::OPEN);
+				money += 10;
+			}
+			if (map.getTile(x,y) == Map::WATER || map.getTile(x,y) == Map::WALL) {
+				x = old_x;
+				y = old_y;
+			}
+			else {
+				map.draw(x,y);
+				mvprintw(Map::DISPLAY+1,0,"X: %i Y: %i\n",x,y);
+				mvprintw(Map::DISPLAY+2,0,"Money: %i\n",money);
+				refresh();
+				old_x = x;
+				old_y = y;
+			}
 		}
-		old_x = x;
-		old_y = y;
+		if (battle) {
+			Menu fight(6,"Hero", "Attack", "Special 1", "Special 2", "Pass", "Run");
+			fight.add_color(6,1,2,3,4,5,6);
+			int option = 1, old_option=0;
+			while(true) {
+				ch = getch();
+				if (ch == DOWN) {
+					if (option < 5)
+						option++;
+				}
+				else if (ch == UP) {
+					if (option > 1)
+						option--;
+				}
+				if (option != old_option) {
+					clear();
+					fight.draw(option);
+					refresh();
+					old_option = option;
+				}
+			}
+		}
 		usleep(1'000'000/MAX_FPS);
 	}
 	turn_off_ncurses();

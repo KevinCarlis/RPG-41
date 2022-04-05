@@ -1,8 +1,9 @@
 #pragma once
 #include <vector>
-#include <string>
+#include <cstring>
 #include <iostream>
 #include <random>
+#include <cstdarg>
 #include <ncurses.h>
 using namespace std; //Boo hiss
 
@@ -10,7 +11,13 @@ class Map {
 	vector<vector<char>> map;
 	default_random_engine gen;
 	public:
-	//TODO: Write a getter and a setter to get/set the characters in the map
+	//Write a getter and a setter to get/set the characters in the map
+	char getTile(int x, int y) {
+		return map.at(y).at(x);
+	}
+	void setTile(int x, int y, char type) {
+		map.at(y).at(x) = type;
+ 	}
 	//TODO: Write a function to save the map and reload the map
 	static const char HERO     = 'H';
 	static const char MONSTER  = 'M';
@@ -113,10 +120,26 @@ class Map {
 	}
 };
 
-class BattleScreen {
+class Menu {
 	static const size_t DISPLAY = 20; //Show a 20x20 area at a time
+	vector<const char*> options;
+	vector<int> colors;
 	public:
-	void draw(/*Hero &hero*/) {
+	Menu(int opt, ...) {
+		va_list valist;
+		va_start(valist, opt);
+		for (int i = 0; i < opt; i++)
+			options.push_back(va_arg(valist, const char*));
+		va_end(valist);
+	}
+	void add_color(int opt, ...) {
+		va_list valist;
+		va_start(valist, opt);
+		for (int i = 0; i < opt; i++)
+			colors.push_back(va_arg(valist, int));
+		va_end(valist);
+	}
+	void draw(int option=1) {
 		for (size_t i = 0; i < DISPLAY; i++) {
 			if (i != DISPLAY - 1)
 				mvaddch(0,i+1,'_');
@@ -124,10 +147,16 @@ class BattleScreen {
 			mvaddch(i+1,0,'|');
 			mvaddch(i+1,DISPLAY,'|');
 		}
-		int space = (DISPLAY - 6) / 7;
-		mvprintw(2+space*2, DISPLAY/2-3, "Attack");
-		mvprintw(3+space*3, DISPLAY/2-4, "Special_1");
-		mvprintw(4+space*4, DISPLAY/2-4, "Special_2");
-		mvprintw(5+space*5, DISPLAY/2-2, "Pass");
+		if (!options.empty()) {
+			attron(COLOR_PAIR(colors.at(0)));
+			mvprintw(2, (DISPLAY-strlen(options.at(0)))/2, options.at(0));
+			attroff(COLOR_PAIR(colors.at(0)));
+			for (size_t i=1; i < options.size(); i++) {
+				attron(COLOR_PAIR(colors.at(i)));
+				mvprintw(3*i+3, (DISPLAY-strlen(options.at(i)))/2, options.at(i));
+				attroff(COLOR_PAIR(colors.at(i)));
+			}
+			mvaddch(option*3+3, (DISPLAY-strlen(options.at(option)))/2-1, '>');
+		}
 	}
 };

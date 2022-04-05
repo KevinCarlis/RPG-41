@@ -36,6 +36,7 @@ void turn_off_ncurses() {
 int main() {
 	turn_on_ncurses();
 	Map map;
+	BattleScreen fight;
 	int x = Map::SIZE / 2, y = Map::SIZE / 2; //Start in middle of the world
 	int old_x = -1, old_y = -1;
 	while (true) {
@@ -50,6 +51,25 @@ int main() {
 			if (x < 0) x = 0;
 		}
 		else if (ch == UP) {
+			int option = 0, old_option=1;
+			while(true) {
+				ch = getch();
+				if (ch == DOWN) {
+					if (option < 3)
+						option++;
+				}
+				else if (ch == UP) {
+					if (option > 0)
+						option--;
+				}
+				if (option != old_option) {
+					clear();
+					fight.draw();
+					mvaddch(6 + option * 3, 4, '>');
+					refresh();
+					old_option = option;
+				}
+			}
 			y--;
 			if (y < 0) y = 0;
 		}

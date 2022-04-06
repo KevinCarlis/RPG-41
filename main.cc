@@ -33,19 +33,20 @@ void turn_on_ncurses() {
 void turn_off_ncurses() {
 	clear();
 	endwin(); // End curses mode
-	system("clear");
+	int systemRet = system("clear");
+	if (systemRet == -1)
+		return;
 }
 
 int main() {
 	turn_on_ncurses();
-	Menu select(6,"Hero 1", "Earth Wizard", " Wizard", " Wizard", " Wizard", " Wizard");
-	select.add_color(6,1,3,1,4,5,6);
+	Menu start(3, "Game Title", "New Game", "Load Game");
+	start.add_color(3, 5, 1, 1);
 	int option = 1, old_option=0;
-	int heroes = 0;
-	while(heroes < 4) {
+	while (true) {
 		int ch = getch();
 		if (ch == DOWN) {
-			if (option < 5)
+			if (option < 2)
 				option++;
 		}
 		else if (ch == UP) {
@@ -54,17 +55,58 @@ int main() {
 		}
 		if (option != old_option) {
 			clear();
-			select.draw(option);
+			start.draw(option);
 			refresh();
 			old_option = option;
 		}
 		usleep(1'000'000/MAX_FPS);
 		if (ch == ENTER) {
-			heroes++;
-			select.change_option(0, ("Hero " + to_string(heroes + 1)).c_str());
 			old_option = 0;
+			if (option == 2)
+				continue; //TODO: write load function
+			else {
+				Menu select(6,"Select Hero 1", "Earth Wizard", " Wizard", " Wizard", " Wizard", " Wizard");
+				select.add_color(6,1,3,1,4,5,6);
+				int heroes = 0;
+				while(heroes < 4) {
+					int ch = getch();
+					if (ch == DOWN) {
+						if (option < 5)
+							option++;
+					}
+					else if (ch == UP) {
+					if (option > 1)
+						option--;
+					}
+					if (option != old_option) {
+						clear();
+						select.draw(option);
+						refresh();
+						old_option = option;
+					}
+					usleep(1'000'000/MAX_FPS);
+					if (ch == ENTER) {
+						heroes++;
+						select.change_option(0, ("Select Hero " + to_string(heroes + 1)).c_str());
+						old_option = 0;
+						/*turn_off_ncurses();
+						string name;
+						cout << "Enter a name:" << endl;
+						cin >> name;
+						turn_on_ncurses();*/
+						/*if (option == 1) //TODO: Add classes
+						else if (option == 2)
+						else if (option == 3)
+						else if (option == 4)
+						else*/ 
+					}
+				}
+			break;
+			}
 		}
 	}
+
+
 	Map map;
 	int x = Map::SIZE / 2, y = Map::SIZE / 2; //Start in middle of the world
 	int old_x = -1, old_y = -1;

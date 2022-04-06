@@ -2,6 +2,7 @@
 #include <vector>
 #include <cstring>
 #include <iostream>
+#include <fstream>
 #include <random>
 #include <cstdarg>
 #include <ncurses.h>
@@ -12,12 +13,12 @@ class Map {
 	default_random_engine gen;
 	public:
 	//Write a getter and a setter to get/set the characters in the map
-	char getTile(int x, int y) {
+	char getTile(int x, int y) const {
 		return map.at(y).at(x);
 	}
 	void setTile(int x, int y, char type) {
 		map.at(y).at(x) = type;
- 	}
+	}
 	//TODO: Write a function to save the map and reload the map
 	static const char HERO     = 'H';
 	static const char MONSTER  = 'M';
@@ -39,7 +40,7 @@ class Map {
 				if (i == 0 or j == 0 or i == SIZE-1 or j == SIZE-1) 
 					map.at(i).at(j) = WALL;
 				else if (i == SIZE/2 and j == SIZE/2) 
-					map.at(i).at(j) = HERO;
+					map.at(i).at(j) = OPEN;
 				else {
 					//5% chance of monster
 					if (d100(gen) <= 5) {
@@ -63,7 +64,7 @@ class Map {
 		}
 	}
 	//Draw the DISPLAY tiles around coordinate (x,y)
-	void draw(int x, int y) {
+	void draw(int x, int y) const {
 		int start_x = x - DISPLAY/2;
 		int end_x = x + DISPLAY/2;
 		int start_y = y - DISPLAY/2;
@@ -144,7 +145,7 @@ class Menu {
 			colors.push_back(va_arg(valist, int));
 		va_end(valist);
 	}
-	void draw(int option=1) {
+	void draw(int option=1) const {
 		for (size_t i = 0; i < DISPLAY; i++) {
 			if (i != DISPLAY - 1)
 				mvaddch(0,i+1,'_');

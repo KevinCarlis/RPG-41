@@ -4,14 +4,10 @@
 #include "actor.h"
 #include <unistd.h>
 #include <string>
+#include <memory>
 
 const int MAX_FPS = 90; //Cap frame rate 
 const unsigned int TIMEOUT = 10; //Milliseconds to wait for a getch to finish
-const int UP = 65; //Key code for up arrow
-const int DOWN = 66;
-const int LEFT = 68;
-const int RIGHT = 67;
-const int ENTER = 10;
 
 //Turns on full screen text mode
 void turn_on_ncurses() {
@@ -38,104 +34,120 @@ void turn_off_ncurses() {
 		return;
 }
 
-int main() {
-	turn_on_ncurses();
-	Menu start(3, "Game Title", "New Game", "Load Game");
-	start.add_color(3, 5, 1, 1);
-	int option = 1, old_option=0;
-	while (true) {
+bool main_menu() {
+	Menu start;
+	start.add_option("Main Menu");
+	start.add_option("Continue");
+	start.add_option("Save");
+	start.add_option("Quit");
+	int option = 1;
+	start.draw(option);
+	while(true) {
 		int ch = getch();
-		if (ch == DOWN) {
-			if (option < 2)
-				option++;
-		}
-		else if (ch == UP) {
-			if (option > 1)
-				option--;
-		}
-		if (option != old_option) {
-			clear();
-			start.draw(option);
-			refresh();
-			old_option = option;
+		if (ch == DOWN || ch == UP) {
+			start.control(ch, option);
 		}
 		usleep(1'000'000/MAX_FPS);
 		if (ch == ENTER) {
-			old_option = 0;
-			if (option == 2)
-				continue; //TODO: write load function
+			if (option == 1)
+				return false;
+			else if (option == 2) {
+				return true;
+			}
 			else {
-				Menu select(6,"Select Hero 1", "Earth Wizard", " Wizard", " Wizard", " Wizard", " Wizard");
-				select.add_color(6,1,3,1,4,5,6);
-				int heroes = 0;
-				while(heroes < 4) {
-					int ch = getch();
-					if (ch == DOWN) {
-						if (option < 5)
-							option++;
-					}
-					else if (ch == UP) {
-					if (option > 1)
-						option--;
-					}
-					if (option != old_option) {
-						clear();
-						select.draw(option);
-						refresh();
-						old_option = option;
-					}
-					usleep(1'000'000/MAX_FPS);
-					if (ch == ENTER) {
-						heroes++;
-						select.change_option(0, ("Select Hero " + to_string(heroes + 1)).c_str());
-						old_option = 0;
-						/*turn_off_ncurses();
-						string name;
-						cout << "Enter a name:" << endl;
-						cin >> name;
-						turn_on_ncurses();*/
-						/*if (option == 1) //TODO: Add classes
-						else if (option == 2)
-						else if (option == 3)
-						else if (option == 4)
-						else*/ 
-					}
-				}
-			break;
+				turn_off_ncurses();
+				exit(EXIT_SUCCESS);
 			}
 		}
 	}
+}
 
+
+int main() {
+	turn_on_ncurses();
+	int ch = getch();
+	Menu select;
+	select.add_option("Game Title", 5);
+	select.add_option("New Game");
+	select.add_option("Load Game");
+	int option = 1;
+	select.draw(option);
+	while (true) {
+		ch = getch();
+		if (ch == DOWN || ch == UP) {
+			select.control(ch, option);
+		}
+		//if(ch != ERR)
+			//mvprintw(0, 25, to_string(ch).c_str()); //figure out key value
+		usleep(1'000'000/MAX_FPS);
+		if (ch == ENTER) {
+			break;
+		}
+	}
+	vector<shared_ptr<Hero>> heroes;
+	if (option == 2)
+		; //TODO: write load function
+	else {
+		option = 1;
+		select.change_option(0, "Choose your Wizards");
+		select.change_option(1, "Earth Wizard", 3);
+		select.change_option(2, " Wizard");
+		select.add_option(" Wizard", 4);
+		select.add_option(" Wizard", 5);
+		select.add_option(" Wizard", 6);
+		select.draw(option);
+		int h = 0;
+		while(h < 4) {
+			ch = getch();
+			if (ch == DOWN || ch == UP) {
+				select.control(ch, option);
+			}
+			usleep(1'000'000/MAX_FPS);
+			if (ch == ENTER) {
+				h++;
+				//select.change_option(0, ("Select Hero " + to_string(heroes + 1)).c_str());
+				turn_off_ncurses();
+				string name;
+				cout << "Enter a name:" << endl;
+				cin >> name;
+				turn_on_ncurses();
+				//if (option == 1) {
+				shared_ptr<Hero> hero = make_shared<EarthWizard>(name);
+				//else if (option == 2)//TODO: Add classes
+				//else if (option == 3)
+				//else if (option == 4)
+				//else
+				heroes.push_back(hero);
+				select.draw(option);
+			}
+		}
+	}
+	//turn_off_ncurses();
+	//for (auto h: heroes)
+		//cout << h->GetName() << endl;
 
 	Map map;
 	int x = Map::SIZE / 2, y = Map::SIZE / 2; //Start in middle of the world
 	int old_x = -1, old_y = -1;
 	int money = 0;
 	bool battle = false;
+	bool save = false;
 	while (true) {
-		int ch = getch(); // Wait for user input, with TIMEOUT delay
-		if (ch == 'q' || ch == 'Q') break;
-		else if (ch == RIGHT) {
-			x++;
-			if (x >= Map::SIZE) x = Map::SIZE - 1; //Clamp value
-		}
-		else if (ch == LEFT) {
-			x--;
-			if (x < 0) x = 0;
-		}
-		else if (ch == UP) {
-			y--;
-			if (y < 0) y = 0;
-		}
-		else if (ch == DOWN) {
-			y++;
-			if (y >= Map::SIZE) y = Map::SIZE - 1; //Clamp value
-		}
-		else if (ch == ERR) { //No keystroke
+		ch = getch(); // Wait for user input, with TIMEOUT delay
+		if (ch == ERR) { //No keystroke
 			; //Do nothing
 		}
+		else if (ch == DOWN || ch == UP || ch == LEFT || ch == RIGHT)
+			map.control(ch, x, y);
+		else if (ch == 'q' || ch == 'Q') {
+			save = main_menu();
+			if (save) {
+				;//TODO: write save;
+			}
+			old_x -= 1;
+		}
 		//Stop flickering by only redrawing on a change
-		if (x != old_x or y != old_y) {
+		if (x != old_x || y != old_y) {
 			//clear(); //Put this in if the screen is getting corrupted
 			if (map.getTile(x,y) == Map::TREASURE) {
 				map.setTile(x,y,Map::OPEN);
@@ -151,8 +163,8 @@ int main() {
 			}
 			else {
 				map.draw(x,y);
-				mvprintw(Map::DISPLAY+1,0,"X: %i Y: %i\n",x,y);
-				mvprintw(Map::DISPLAY+2,0,"Money: %i\n",money);
+				mvprintw(DISPLAY+1,0,"X: %i Y: %i\n",x,y);
+				mvprintw(DISPLAY+2,0,"Money: %i\n",money);
 				refresh();
 				old_x = x;
 				old_y = y;
@@ -160,28 +172,19 @@ int main() {
 		}
 		usleep(1'000'000/MAX_FPS);
 		if (battle) {
-			Menu fight(6,"Hero", "Attack", "Special 1", "Special 2", "Pass", "Run");
-			fight.add_color(6,3,1,1,1,1,1);
+			Menu fight;
+			fight.add_option("Hero", 3);
+			fight.add_option("Attack");
+			fight.add_option("Special 1");
+			fight.add_option("Special 2");
+			fight.add_option("Pass");
+			fight.add_option("Run");
 			option = 1;
-			old_option=0;
+			fight.draw(option);
 			while(battle) {
 				ch = getch();
-				if (ch == DOWN) {
-					if (option < 5)
-						option++;
-				}
-				else if (ch == UP) {
-					if (option > 1)
-						option--;
-				}
-				/*if (ch != ERR) {
-					mvprintw(0, 25, to_string(ch).c_str()); //figure out key value
-				}*/
-				if (option != old_option) {
-					clear();
-					fight.draw(option);
-					refresh();
-					old_option = option;
+				if (ch == DOWN || ch == UP) {
+					fight.control(ch, option);
 				}
 				usleep(1'000'000/MAX_FPS);
 				if (ch == ENTER) {

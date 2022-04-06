@@ -117,6 +117,9 @@ class Actor {
 	int GetColor() const {
 		return color;
 	}
+	virtual string print_stats() {
+		return "HP: " + to_string(hp.GetTotal());
+	}
 };
 
 class Monster: public Actor {
@@ -153,8 +156,11 @@ class Hero: public Actor {
 	string GetMove2() const {
 		return move2;
 	}
-	virtual bool use_move1() = 0;
-	virtual bool use_move2() = 0;
+	virtual string print_stats() override {
+		return Actor::print_stats() + " Mana: " + to_string(mana.GetTotal());
+	}
+	virtual bool use_move1(){return true;};
+	virtual bool use_move2(){return true;};
 };
 
 class EarthWizard: public Hero {

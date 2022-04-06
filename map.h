@@ -7,6 +7,13 @@
 #include <cstdarg>
 #include <ncurses.h>
 using namespace std; //Boo hiss
+	
+const int UP = 65; //Key code for up arrow
+const int DOWN = 66;
+const int LEFT = 68;
+const int RIGHT = 67;
+const int ENTER = 10;
+const size_t DISPLAY = 20; //Show a 20x20 area at a time
 
 class Map {
 	vector<vector<char>> map;
@@ -27,7 +34,6 @@ class Map {
 	static const char OPEN     = '.';
 	static const char TREASURE = '$';
 	static const size_t SIZE = 100; //World is a 100x100 map
-	static const size_t DISPLAY = 20; //Show a 20x20 area at a time
 	//Randomly generate map
 	void init_map() {
 		uniform_int_distribution<int> d100(1,100);
@@ -116,53 +122,90 @@ class Map {
 			}
 		}
 	}
+	void control(int ch, int &x, int &y) {
+		if (ch == RIGHT) {
+			if (x < SIZE)
+				x++;
+		}
+		else if (ch == LEFT) {
+			if (x > 0)
+				x--;
+		}
+		else if (ch == UP) {
+			if (y > 0)
+				y--;
+		}
+		else if (ch == DOWN) {
+			if (y < SIZE)
+				y++;
+		}
+	}
 	Map() {
 		init_map();
 	}
 };
 
 class Menu {
-	static const size_t DISPLAY = 20; //Show a 20x20 area at a time
 	vector<const char*> options;
 	vector<int> colors;
+	vector<int> rows;
 	public:
-	Menu(int opt, ...) {
-		options.clear();
-		va_list valist;
-		va_start(valist, opt);
-		for (int i = 0; i < opt; i++)
-			options.push_back(va_arg(valist, const char*));
-		va_end(valist);
+	void add_option(const char* opt, int color=1) {
+		options.push_back(opt);
+		colors.push_back(color);
+		rows.push_back(options.size()*3-1);
+	}
+	void add_option(const char* opt, int color, int row) {
+		options.push_back(opt);
+		colors.push_back(color);
+		rows.push_back(row);
 	}
 	void change_option(int opt, const char* text) {
 		options.at(opt) = text;
 	}
-	void add_color(int opt, ...) {
-		colors.clear();
-		va_list valist;
-		va_start(valist, opt);
-		for (int i = 0; i < opt; i++)
-			colors.push_back(va_arg(valist, int));
-		va_end(valist);
+	void change_option(int opt, const char* text, int color) {
+		options.at(opt) = text;
+		change_color(opt, color);
+	}
+	void change_color(int opt, int color) {
+		colors.at(opt) = color;
 	}
 	void draw(int option=1) const {
+		clear();
 		for (size_t i = 0; i < DISPLAY; i++) {
-			if (i != DISPLAY - 1)
-				mvaddch(0,i+1,'_');
+			mvaddch(0,i+1,'_');
 			mvaddch(DISPLAY,i,'_');
 			mvaddch(i+1,0,'|');
 			mvaddch(i+1,DISPLAY,'|');
 		}
+		mvaddch(0, DISPLAY, ' ');
 		if (!options.empty()) {
-			attron(COLOR_PAIR(colors.at(0)));
-			mvprintw(2, (DISPLAY-strlen(options.at(0)))/2, options.at(0));
-			attroff(COLOR_PAIR(colors.at(0)));
-			for (size_t i=1; i < options.size(); i++) {
+			for (size_t i=0; i < options.size(); i++) {
 				attron(COLOR_PAIR(colors.at(i)));
-				mvprintw(i*3+3, (DISPLAY-strlen(options.at(i)))/2, options.at(i));
+				mvprintw(rows.at(i), (DISPLAY-strlen(options.at(i)))/2+1, options.at(i));
 				attroff(COLOR_PAIR(colors.at(i)));
 			}
-			mvaddch(option*3+3, (DISPLAY-strlen(options.at(option)))/2-1, '>');
+			if (options.size() > 1)
+				mvaddch(rows.at(option), (DISPLAY-strlen(options.at(option)))/2, '>');
 		}
+		refresh();
+	}
+	void control(int ch, int &option) {
+		if (ch == DOWN) {
+			mvaddch(rows.at(option), (DISPLAY-strlen(options.at(option)))/2, ' ');
+			if (option < options.size() - 1)
+				option++;
+			else
+				option = 1;
+		}
+		else if (ch == UP) {
+			mvaddch(rows.at(option), (DISPLAY-strlen(options.at(option)))/2, ' ');
+			if (option > 1)
+				option--;
+			else
+				option = options.size() - 1;
+		}
+		mvaddch(rows.at(option), (DISPLAY-strlen(options.at(option)))/2, '>');
+		refresh();
 	}
 };

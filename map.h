@@ -6,6 +6,7 @@
 #include <random>
 #include <cstdarg>
 #include <ncurses.h>
+
 using namespace std; //Boo hiss
 
 class Map {
@@ -20,6 +21,26 @@ class Map {
 		map.at(y).at(x) = type;
 	}
 	//TODO: Write a function to save the map and reload the map
+	void save_map(){                                                                                                                                                    
+        	ofstream newFile;                                                                                                                                               
+        	newFile.open ("save.txt");                                                                                                                                      
+        	for (size_t i = 0; i < SIZE; i++) {                                                                                                                             
+            		for (size_t j = 0; j < SIZE; j++) {                                                                                                                         
+                		newFile << map.at(i).at(j)  << endl;                                                                                                                    
+            		}                                                                                                                                                           
+        	}                                                                                                                                                               
+    	}                                                                                                                                                                   
+                                                                                                                                                                        
+    	void load_map(){                                                                                                                                                    
+        	ifstream readfile;                                                                                                                                              
+        	char type;                                                                                                                                                      
+        	readfile.open ("save.txt");                                                                                                                                     
+        	for (size_t i = 0; i < SIZE; i++) {                                                                                                                             
+            		for (size_t j = 0; j < SIZE; j++) {                                                                                                                         
+                		readfile >> map.at(i).at(j);                                                                                                                            
+            		}                                                                                                                                                           
+        	}                                                                                                                                                               
+    	}
 	static const char HERO     = 'H';
 	static const char MONSTER  = 'M';
 	static const char WALL     = '#';

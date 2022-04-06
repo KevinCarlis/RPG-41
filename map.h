@@ -19,14 +19,35 @@ class Map {
 	vector<vector<char>> map;
 	default_random_engine gen;
 	public:
-	//Write a getter and a setter to get/set the characters in the map
 	char getTile(int x, int y) const {
 		return map.at(y).at(x);
 	}
 	void setTile(int x, int y, char type) {
 		map.at(y).at(x) = type;
 	}
-	//TODO: Write a function to save the map and reload the map
+	void save(string filename="save.txt") {
+		ofstream outfile;
+		outfile.open(filename);
+		for (size_t i = 0; i < SIZE; i++) {
+			for (size_t j = 0; j < SIZE; j++) {
+				outfile << map.at(i).at(j); 
+			}
+			outfile << endl;
+		}
+	}
+	void load(string filename="save.txt") {
+		ifstream infile;
+		infile.open(filename);
+		map.clear();
+		map.resize(SIZE);
+		for (auto &v : map) v.resize(SIZE,'.');
+		for (size_t i = 0; i < SIZE; i++) {
+			for (size_t j = 0; j < SIZE; j++) {
+				infile >> map.at(i).at(j);
+			}
+		}
+	}
+
 	static const char HERO     = 'H';
 	static const char MONSTER  = 'M';
 	static const char WALL     = '#';
@@ -140,8 +161,9 @@ class Map {
 				y++;
 		}
 	}
-	Map() {
-		init_map();
+	Map() {;}
+	Map(string savefile) {
+		load(savefile);
 	}
 };
 

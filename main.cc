@@ -62,16 +62,20 @@ bool main_menu() {
 	}
 }
 
-
 int main() {
 	turn_on_ncurses();
+	Map map;
 	int ch = getch();
+	int option = 1;
+	vector<shared_ptr<Hero>> heroes;
+
 	Menu select;
 	select.add_option("Game Title", 5);
 	select.add_option("New Game");
 	select.add_option("Load Game");
-	int option = 1;
+	select.add_option("Quit");
 	select.draw(option);
+
 	while (true) {
 		ch = getch();
 		if (ch == DOWN || ch == UP) {
@@ -84,18 +88,15 @@ int main() {
 			break;
 		}
 	}
-	vector<shared_ptr<Hero>> heroes;
-	if (option == 2)
-		; //TODO: write load function
-	else {
-		option = 1;
+	if (option == 1) {
 		select.change_option(0, "Choose your Wizards");
 		select.change_option(1, "Earth Wizard", 3);
 		select.change_option(2, " Wizard");
-		select.add_option(" Wizard", 4);
+		select.change_option(3, " Wizard", 4);
 		select.add_option(" Wizard", 5);
 		select.add_option(" Wizard", 6);
 		select.draw(option);
+
 		int h = 0;
 		while(h < 4) {
 			ch = getch();
@@ -121,12 +122,19 @@ int main() {
 				select.draw(option);
 			}
 		}
+		map.init_map();
+		//turn_off_ncurses();
+		//for (auto h: heroes)
+			//cout << h->GetName() << endl;
 	}
-	//turn_off_ncurses();
-	//for (auto h: heroes)
-		//cout << h->GetName() << endl;
+	else if (option == 2) {
+		map.load("save.txt"); //TODO: write load functions
+	}
+	else {
+		turn_off_ncurses();
+		exit(EXIT_SUCCESS);
+	}
 
-	Map map;
 	int x = Map::SIZE / 2, y = Map::SIZE / 2; //Start in middle of the world
 	int old_x = -1, old_y = -1;
 	int money = 0;
@@ -142,7 +150,7 @@ int main() {
 		else if (ch == 'q' || ch == 'Q') {
 			save = main_menu();
 			if (save) {
-				;//TODO: write save;
+				map.save();//TODO: write save;
 			}
 			old_x -= 1;
 		}

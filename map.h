@@ -168,16 +168,16 @@ class Map {
 };
 
 class Menu {
-	vector<const char*> options;
+	vector<string> options;
 	vector<int> colors;
 	vector<int> rows;
 	public:
-	void add_option(const char* opt, int color=1) {
+	void add_option(string opt, int color=1) {
 		options.push_back(opt);
 		colors.push_back(color);
 		rows.push_back(options.size()*3-1);
 	}
-	void add_option(const char* opt, int color, int row) {
+	void add_option(string opt, int color, int row) {
 		options.push_back(opt);
 		colors.push_back(color);
 		rows.push_back(row);
@@ -192,7 +192,7 @@ class Menu {
 	void change_color(int opt, int color) {
 		colors.at(opt) = color;
 	}
-	void draw(int option=1) const {
+	void draw(int option=-1) const {
 		clear();
 		for (size_t i = 0; i < DISPLAY; i++) {
 			mvaddch(0,i+1,'_');
@@ -204,30 +204,30 @@ class Menu {
 		if (!options.empty()) {
 			for (size_t i=0; i < options.size(); i++) {
 				attron(COLOR_PAIR(colors.at(i)));
-				mvprintw(rows.at(i), (DISPLAY-strlen(options.at(i)))/2+1, options.at(i));
+				mvprintw(rows.at(i), (DISPLAY-options.at(i).length())/2+1, options.at(i).c_str());
 				attroff(COLOR_PAIR(colors.at(i)));
 			}
-			if (options.size() > 1)
-				mvaddch(rows.at(option), (DISPLAY-strlen(options.at(option)))/2, '>');
+			if (options.size() > 1 && option != -1)
+				mvaddch(rows.at(option), (DISPLAY-options.at(option).length())/2, '>');
 		}
 		refresh();
 	}
 	void control(int ch, int &option) {
 		if (ch == DOWN) {
-			mvaddch(rows.at(option), (DISPLAY-strlen(options.at(option)))/2, ' ');
+			mvaddch(rows.at(option), (DISPLAY-options.at(option).length())/2, ' ');
 			if (option < options.size() - 1)
 				option++;
 			else
 				option = 1;
 		}
 		else if (ch == UP) {
-			mvaddch(rows.at(option), (DISPLAY-strlen(options.at(option)))/2, ' ');
+			mvaddch(rows.at(option), (DISPLAY-options.at(option).length())/2, ' ');
 			if (option > 1)
 				option--;
 			else
 				option = options.size() - 1;
 		}
-		mvaddch(rows.at(option), (DISPLAY-strlen(options.at(option)))/2, '>');
+		mvaddch(rows.at(option), (DISPLAY-options.at(option).length())/2, '>');
 		refresh();
 	}
 };

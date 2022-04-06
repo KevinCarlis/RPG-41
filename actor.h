@@ -85,6 +85,14 @@ class Actor {
 	int color; //1: white, 2: blue, 3: green, 4: yellow, 5: red, 6:purple
 
 	public:
+	Actor() {;}
+	Actor(string userName, int userSpeed, unsigned int userAttack, unsigned int userHP, int userColor) {
+		name = userName;
+		speed = userSpeed;
+		attack = userAttack;
+		hp = Resource(userHP);
+		color = userColor;
+	}
 	void SetName(string userName) {
 		name = userName;
 	}
@@ -117,8 +125,8 @@ class Actor {
 	int GetColor() const {
 		return color;
 	}
-	virtual string print_stats() {
-		return "HP: " + to_string(hp.GetTotal());
+	virtual string print() {
+		return "HP:" + to_string(hp.GetTotal());
 	}
 };
 
@@ -126,6 +134,16 @@ class Monster: public Actor {
 	public:
 	Monster() {
 		SetColor(5);
+	}
+};
+
+class GrimmyGoblim : public Monster {
+	public:
+	GrimmyGoblim() {
+		SetName("GrimmyGoblim");
+		SetSpeed(18);
+		SetAttack(15);
+		SetHP(95);
 	}
 };
 
@@ -156,8 +174,8 @@ class Hero: public Actor {
 	string GetMove2() const {
 		return move2;
 	}
-	virtual string print_stats() override {
-		return Actor::print_stats() + " Mana: " + to_string(mana.GetTotal());
+	virtual string print() override {
+		return Actor::print() + " Mana:" + to_string(mana.GetTotal());
 	}
 	virtual bool use_move1(){return true;};
 	virtual bool use_move2(){return true;};
@@ -165,12 +183,12 @@ class Hero: public Actor {
 
 class EarthWizard: public Hero {
 	public:
-	EarthWizard(string userName="Frank", int userSpeed=17) {
+	EarthWizard(string userName="Frank", int currhp=120, int temphp=20, int currmana=95) {
 		SetName(userName);
-		SetSpeed(userSpeed);
+		SetSpeed(17);
 		SetAttack(25);
-		SetHP(120, 120, 20);
-		SetMana(95);
+		SetHP(120, currhp, temphp);
+		SetMana(95, currmana);
 		SetColor(3);
 		SetMove1("Boulder Barrage");
 		SetMove2("Rock Wall");

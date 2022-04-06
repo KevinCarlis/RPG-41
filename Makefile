@@ -1,4 +1,4 @@
 a.out: main.cc map.h actor.h
-	g++ main.cc -O3 -lncurses #-lcurl
+	g++ main.cc -g -lncurses #-lcurl
 clean:
 	rm -rf a.out core *.o

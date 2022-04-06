@@ -62,7 +62,63 @@ bool main_menu() {
 	}
 }
 
+void party_menu(vector<shared_ptr<Hero>> v) {
+	Menu list;
+	list.add_option("Party");
+	for (int i = 0; i < v.size(); i++) {
+		list.add_option(v.at(i)->GetName(), 1, i*3+5);
+		list.add_option(v.at(i)->print(), 1, i*3+6);
+	}
+	list.add_option("Exit", 1, 19);
+	list.draw();
+	mvaddch(19, 8, '>');
+	while(true) {
+		int ch = getch();
+		usleep(1'000'000/MAX_FPS);
+		if (ch == ENTER) {
+			return;
+		}
+	}
+}
+
+void save_party(vector<shared_ptr<Hero>> v, string file="heroes.txt") {
+	ofstream out;
+	out.open(file);
+	for (auto h : v) {
+		if (h->GetMove1()=="Boulder Barrage")
+			out << "Earth" << '\t';
+		out << h->GetName() << '\t';
+		out << h->GetHP().GetCurr() << '\t';
+		out << h->GetHP().GetTemp() << '\t';
+		out << h->GetMana().GetCurr() << '\t';
+		out << endl;
+	}
+	out.close();
+}
+
+vector<shared_ptr<Hero>> load_party(string file="heroes.txt") {
+	vector<shared_ptr<Hero>> v;
+	shared_ptr<Hero> hero;
+	ifstream in;
+	in.open(file);
+	string type, name;
+	int currhp, temphp, mana;
+	for (int h = 0; h < 4; h++) {
+		in >> type;
+		in >> name;
+		in >> currhp;
+		in >> temphp;
+		in >> mana;
+		if (type == "Earth")
+			hero = make_shared<EarthWizard>(name, currhp, temphp, mana);
+		v.push_back(hero);
+	}
+	return v;
+}
+
 int main() {
+	turn_on_ncurses();
+	turn_off_ncurses();
 	turn_on_ncurses();
 	Map map;
 	int ch = getch();
@@ -122,13 +178,16 @@ int main() {
 				select.draw(option);
 			}
 		}
+		//for (auto h: heroes) {
+		//	cout << h->GetName() << endl;
+		//	cout << h->print() << endl << endl;
+		//}
 		map.init_map();
-		//turn_off_ncurses();
-		//for (auto h: heroes)
-			//cout << h->GetName() << endl;
 	}
 	else if (option == 2) {
-		map.load("save.txt"); //TODO: write load functions
+		map.load();
+		heroes = load_party();
+		//TODO: write load game data functions
 	}
 	else {
 		turn_off_ncurses();
@@ -142,21 +201,19 @@ int main() {
 	bool save = false;
 	while (true) {
 		ch = getch(); // Wait for user input, with TIMEOUT delay
-		if (ch == ERR) { //No keystroke
-			; //Do nothing
-		}
+		if (ch == ERR) {;}
 		else if (ch == DOWN || ch == UP || ch == LEFT || ch == RIGHT)
 			map.control(ch, x, y);
 		else if (ch == 'q' || ch == 'Q') {
 			save = main_menu();
 			if (save) {
-				map.save();//TODO: write save;
+				map.save();
+				save_party(heroes);
+				//TODO: write save game data;
 			}
 			old_x -= 1;
 		}
-		//Stop flickering by only redrawing on a change
 		if (x != old_x || y != old_y) {
-			//clear(); //Put this in if the screen is getting corrupted
 			if (map.getTile(x,y) == Map::TREASURE) {
 				map.setTile(x,y,Map::OPEN);
 				money += 10;
@@ -186,7 +243,7 @@ int main() {
 			fight.add_option("Special 1");
 			fight.add_option("Special 2");
 			fight.add_option("Pass");
-			fight.add_option("Run");
+			fight.add_option("Party");
 			option = 1;
 			fight.draw(option);
 			while(battle) {
@@ -196,6 +253,8 @@ int main() {
 				}
 				usleep(1'000'000/MAX_FPS);
 				if (ch == ENTER) {
+					if (option == 5)
+						party_menu(heroes);
 					battle = false;
 				}
 			}

@@ -5,15 +5,15 @@
 
 #include "Bridges.h"
 #include "CircDLelement.h"
-#include "StudentInfo.h"
+#include "actor.h"
 
 
 using namespace bridges;
 
 // helper function
-CircDLelement<StudentInfo> *insertFront(
-	CircDLelement<StudentInfo> *tailElement,
-	CircDLelement<StudentInfo> *newElement);
+CircDLelement<Actor> *insertFront(
+	CircDLelement<Actor> *tailElement,
+	CircDLelement<Actor> *newElement);
 
 int main(int argc, char **argv) {
     Bridges *bridges =  new Bridges(999, "YOUR_USER_ID",
@@ -23,60 +23,51 @@ int main(int argc, char **argv) {
 
 	// create the linked list elements with
 	// student data
-	CircDLelement<StudentInfo> *students[] = {
-		new CircDLelement<StudentInfo>(
-			StudentInfo(
-				"00000000000",
+	Actor(string userName, int userSpeed, unsigned int userAttack, unsigned int userHP, int userColor) {
+	CircDLelement<Actor> *students[] = {
+		new CircDLelement<Actor>(
+			Actor(
 				"Gretel Chaney",
-				"CS",
-				"g.chaney@generated.com",
-				"magenta",
-				"blue",
-				9.0
+				12,
+				1,
+				132,
+				2
 			), ""),
-		new CircDLelement<StudentInfo>(
-			StudentInfo(
-				"00000000001",
+		new CircDLelement<Actor>(
+			Actor(
 				"Karol Soderman",
-				"SIS",
-				"k.soderman@generated.com",
-				"magenta",
-				"red",
-				11.0
+				11,
+				23,
+				143,
+				1
 			), ""),
-		new CircDLelement<StudentInfo>(
-			StudentInfo(
-				"00000000002",
+		new CircDLelement<Actor>(
+			Actor(
 				"Lamont Kyler",
-				"BIO",
-				"l.kyler@generated.com",
-				"yellow",
-				"green",
-				12.0
+				23,
+				12,
+				95,
+				2
 			), ""),
-		new CircDLelement<StudentInfo>(
-			StudentInfo(
-				"00000000003",
+		new CircDLelement<Actor>(
+			Actor(
 				"Gladys Serino",
-				"CS",
-				"g.serino@generated.com",
-				"blue",
-				"magenta",
-				9.0
+				17,
+				22,
+				113,
+				6
 			), ""),
-		new CircDLelement<StudentInfo>(
-			StudentInfo(
-				"00000000004",
+		new CircDLelement<Actor>(
+			Actor(
 				"Starr Mcginn",
-				"CS",
-				"s.mcginn@generated.com",
-				"red",
-				"yellow",
-				15.0
+				25,
+				16,
+				420,
+				5
 			), "")
 	};
 
-	CircDLelement<StudentInfo> *head =  nullptr;
+	CircDLelement<Actor> *head =  nullptr;
 
 	int num_students = 5;
 	for (int i = 0; i < num_students; i++) {
@@ -87,18 +78,18 @@ int main(int argc, char **argv) {
 	}
 
 	//  add visual attributes
-	CircDLelement<StudentInfo> *current = head;
+	CircDLelement<Actor> *current = head;
 	StudentInfo si;
 	do {
 		si = current->getValue();
-		current->setLabel(si.getStudentLabel());
-		current->getVisualizer()->setColor(si.getFavoriteColor());
+		current->setLabel(si.GetName());
+		current->getVisualizer()->setColor(si.GetColor());
 
-		current->getLinkVisualizer(current->getNext())->setColor(si.getDislikeColor());
-		current->getLinkVisualizer(current->getNext())->setThickness(si.getStudentCreditHours()*.5);
+		current->getLinkVisualizer(current->getNext())->setColor(si.GetColor());
+		current->getLinkVisualizer(current->getNext())->setThickness(si.GetSpeed()*.5);
 
-		current->getLinkVisualizer(current->getPrev())->setColor(si.getDislikeColor());
-		current->getLinkVisualizer(current->getPrev())->setThickness(si.getStudentCreditHours()*.5);
+		current->getLinkVisualizer(current->getPrev())->setColor(si.GetColor());
+		current->getLinkVisualizer(current->getPrev())->setThickness(si.GetSpeed()*.5);
 
 		current = current->getNext();
 	}  while (current != head);
@@ -111,11 +102,11 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-CircDLelement<StudentInfo> *insertFront(
-	CircDLelement<StudentInfo> *tailElement,
-	CircDLelement<StudentInfo> *newElement) {
+CircDLelement<Actor> *insertFront(
+	CircDLelement<Actor> *tailElement,
+	CircDLelement<Actor> *newElement) {
 
-	CircDLelement<StudentInfo> *tailNextElement = tailElement->getNext();
+	CircDLelement<Actor> *tailNextElement = tailElement->getNext();
 
 	newElement->setNext(tailNextElement);
 	newElement->setPrev(tailElement);

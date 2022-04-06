@@ -3,6 +3,7 @@
 #include "map.h"
 #include "actor.h"
 #include <unistd.h>
+#include <string>
 
 const int MAX_FPS = 90; //Cap frame rate 
 const unsigned int TIMEOUT = 10; //Milliseconds to wait for a getch to finish
@@ -10,6 +11,7 @@ const int UP = 65; //Key code for up arrow
 const int DOWN = 66;
 const int LEFT = 68;
 const int RIGHT = 67;
+const int ENTER = 10;
 
 //Turns on full screen text mode
 void turn_on_ncurses() {
@@ -68,6 +70,7 @@ int main() {
 			//clear(); //Put this in if the screen is getting corrupted
 			if (map.getTile(x,y) == Map::MONSTER) {
 				battle = true;
+				map.setTile(x,y,Map::OPEN);
 			}
 			if (map.getTile(x,y) == Map::TREASURE) {
 				map.setTile(x,y,Map::OPEN);
@@ -86,11 +89,12 @@ int main() {
 				old_y = y;
 			}
 		}
+		usleep(1'000'000/MAX_FPS);
 		if (battle) {
 			Menu fight(6,"Hero", "Attack", "Special 1", "Special 2", "Pass", "Run");
 			fight.add_color(6,1,2,3,4,5,6);
 			int option = 1, old_option=0;
-			while(true) {
+			while(battle) {
 				ch = getch();
 				if (ch == DOWN) {
 					if (option < 5)
@@ -100,15 +104,22 @@ int main() {
 					if (option > 1)
 						option--;
 				}
+				/*if (ch != ERR) {
+					mvprintw(0, 25, to_string(ch).c_str()); //figure out key value
+				}*/
 				if (option != old_option) {
 					clear();
 					fight.draw(option);
 					refresh();
 					old_option = option;
 				}
+				usleep(1'000'000/MAX_FPS);
+				if (ch == ENTER) {
+					battle = false;
+					old_x = x-1;
+				}
 			}
 		}
-		usleep(1'000'000/MAX_FPS);
 	}
 	turn_off_ncurses();
 }

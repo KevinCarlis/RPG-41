@@ -153,7 +153,7 @@ class Menu {
 			attroff(COLOR_PAIR(colors.at(0)));
 			for (size_t i=1; i < options.size(); i++) {
 				attron(COLOR_PAIR(colors.at(i)));
-				mvprintw(3*i+3, (DISPLAY-strlen(options.at(i)))/2, options.at(i));
+				mvprintw(i*3+3, (DISPLAY-strlen(options.at(i)))/2, options.at(i));
 				attroff(COLOR_PAIR(colors.at(i)));
 			}
 			mvaddch(option*3+3, (DISPLAY-strlen(options.at(option)))/2-1, '>');

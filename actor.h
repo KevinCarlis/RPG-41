@@ -82,7 +82,7 @@ class Actor {
 	int speed;
 	unsigned int attack;
 	Resource hp;
-	int color;
+	int color; //1: white, 2: blue, 3: green, 4: yellow, 5: red, 6:purple
 
 	public:
 	void SetName(string userName) {
@@ -119,9 +119,9 @@ class Actor {
 	}
 };
 
-class Villain: public Actor {
+class Monster: public Actor {
 	public:
-	Villain() {
+	Monster() {
 		SetColor(5);
 	}
 };
@@ -175,7 +175,7 @@ class EarthWizard: public Hero {
 		va_list valist;
 		va_start(valist, enemies);
 		for (int i = 0; i < enemies; i++)
-			va_arg(valist, Villain*)->GetHP() -= 15;
+			va_arg(valist, Monster*)->GetHP() -= 15;
 		va_end(valist);
 		return true;
 	}

@@ -126,13 +126,18 @@ class Menu {
 	vector<int> colors;
 	public:
 	Menu(int opt, ...) {
+		options.clear();
 		va_list valist;
 		va_start(valist, opt);
 		for (int i = 0; i < opt; i++)
 			options.push_back(va_arg(valist, const char*));
 		va_end(valist);
 	}
+	void change_option(int opt, const char* text) {
+		options.at(opt) = text;
+	}
 	void add_color(int opt, ...) {
+		colors.clear();
 		va_list valist;
 		va_start(valist, opt);
 		for (int i = 0; i < opt; i++)

@@ -1,6 +1,7 @@
 //Put your name(s) here:
 //What bullet points did you do:
 #include "map.h"
+#include "actor.h"
 #include <unistd.h>
 
 const int MAX_FPS = 90; //Cap frame rate 

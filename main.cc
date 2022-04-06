@@ -38,6 +38,33 @@ void turn_off_ncurses() {
 
 int main() {
 	turn_on_ncurses();
+	Menu select(6,"Hero 1", "Earth Wizard", " Wizard", " Wizard", " Wizard", " Wizard");
+	select.add_color(6,1,3,1,4,5,6);
+	int option = 1, old_option=0;
+	int heroes = 0;
+	while(heroes < 4) {
+		int ch = getch();
+		if (ch == DOWN) {
+			if (option < 5)
+				option++;
+		}
+		else if (ch == UP) {
+			if (option > 1)
+				option--;
+		}
+		if (option != old_option) {
+			clear();
+			select.draw(option);
+			refresh();
+			old_option = option;
+		}
+		usleep(1'000'000/MAX_FPS);
+		if (ch == ENTER) {
+			heroes++;
+			select.change_option(0, ("Hero " + to_string(heroes + 1)).c_str());
+			old_option = 0;
+		}
+	}
 	Map map;
 	int x = Map::SIZE / 2, y = Map::SIZE / 2; //Start in middle of the world
 	int old_x = -1, old_y = -1;
@@ -68,10 +95,6 @@ int main() {
 		//Stop flickering by only redrawing on a change
 		if (x != old_x or y != old_y) {
 			//clear(); //Put this in if the screen is getting corrupted
-			if (map.getTile(x,y) == Map::MONSTER) {
-				battle = true;
-				map.setTile(x,y,Map::OPEN);
-			}
 			if (map.getTile(x,y) == Map::TREASURE) {
 				map.setTile(x,y,Map::OPEN);
 				money += 10;
@@ -79,6 +102,10 @@ int main() {
 			if (map.getTile(x,y) == Map::WATER || map.getTile(x,y) == Map::WALL) {
 				x = old_x;
 				y = old_y;
+			}
+			else if (map.getTile(x,y) == Map::MONSTER) {
+				battle = true;
+				map.setTile(x,y,Map::OPEN);
 			}
 			else {
 				map.draw(x,y);
@@ -92,8 +119,9 @@ int main() {
 		usleep(1'000'000/MAX_FPS);
 		if (battle) {
 			Menu fight(6,"Hero", "Attack", "Special 1", "Special 2", "Pass", "Run");
-			fight.add_color(6,1,2,3,4,5,6);
-			int option = 1, old_option=0;
+			fight.add_color(6,3,1,1,1,1,1);
+			option = 1;
+			old_option=0;
 			while(battle) {
 				ch = getch();
 				if (ch == DOWN) {
@@ -116,7 +144,6 @@ int main() {
 				usleep(1'000'000/MAX_FPS);
 				if (ch == ENTER) {
 					battle = false;
-					old_x = x-1;
 				}
 			}
 		}

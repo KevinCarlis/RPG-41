@@ -120,10 +120,10 @@ class Actor {
 };
 
 class Villain: public Actor {
+	public:
 	Villain() {
 		SetColor(5);
 	}
-	//public:
 };
 
 class Hero: public Actor {
@@ -158,6 +158,7 @@ class Hero: public Actor {
 };
 
 class EarthWizard: public Hero {
+	public:
 	EarthWizard(string userName="Frank", int userSpeed=17) {
 		SetName(userName);
 		SetSpeed(userSpeed);
@@ -186,5 +187,3 @@ class EarthWizard: public Hero {
 		return true;
 	}
 };
-
-

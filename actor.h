@@ -126,7 +126,9 @@ class Actor {
 		return color;
 	}
 	virtual string print() {
-		return "HP:" + to_string(hp.GetTotal());
+		if (hp.GetTemp() > 0)
+			return "HP:" + to_string(hp.GetCurr()) + '+' + to_string(hp.GetTemp());
+		return "HP:" + to_string(hp.GetCurr());
 	}
 };
 
@@ -175,7 +177,7 @@ class Hero: public Actor {
 		return move2;
 	}
 	virtual string print() override {
-		return Actor::print() + " Mana:" + to_string(mana.GetTotal());
+		return Actor::print() + " MP:" + to_string(mana.GetTotal());
 	}
 	virtual bool use_move1(){return true;};
 	virtual bool use_move2(){return true;};

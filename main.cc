@@ -34,7 +34,49 @@ void turn_off_ncurses() {
 		return;
 }
 
-void party_menu(vector<shared_ptr<Hero>> v) {
+void fight_menu(int &option, shared_ptr<Hero> &h) {
+	Menu fight;
+	fight.add_option(h->GetName(), h->GetColor());
+	fight.add_option("Attack");
+	fight.add_option("Special 1");
+	fight.add_option("Special 2");
+	fight.add_option("Pass");
+	fight.add_option("Party");
+	fight.draw(option);
+	while (true) {
+		int ch = getch();
+		if (ch == DOWN || ch == UP) {
+			fight.control(ch, option);
+		}
+		usleep(1'000'000/MAX_FPS);
+		if (ch == ENTER) {
+			return;
+		}
+	}
+}
+
+template <class T>
+shared_ptr<T> actor_select(vector<shared_ptr<T>> &v, int option=1) {
+	Menu select;
+	select.add_option("Select Target");
+	for (int i = 0; i < v.size(); i++) {
+		select.add_option(v.at(i)->GetName(), 1, i*3+5);
+		select.add_option(v.at(i)->print(),   1, i*3+6);
+	}
+	select.draw(1);
+	while (true) {
+		int ch = getch();
+		if (ch == DOWN || ch == UP) {
+			select.actor_control(ch, option);
+		}
+		usleep(1'000'000/MAX_FPS);
+		if (ch == ENTER) {
+			return v.at(option-1);
+		}
+	}
+}
+
+void party_menu(vector<shared_ptr<Hero>> &v) {
 	Menu list;
 	list.add_option("Party");
 	for (int i = 0; i < v.size(); i++) {
@@ -44,7 +86,7 @@ void party_menu(vector<shared_ptr<Hero>> v) {
 	list.add_option("Exit", 1, 19);
 	list.draw();
 	mvaddch(19, 8, '>');
-	while(true) {
+	while (true) {
 		int ch = getch();
 		usleep(1'000'000/MAX_FPS);
 		if (ch == ENTER) {
@@ -53,7 +95,7 @@ void party_menu(vector<shared_ptr<Hero>> v) {
 	}
 }
 
-void save_party(vector<shared_ptr<Hero>> v, string file="heroes.txt") {
+void save_party(vector<shared_ptr<Hero>> &v, string file="heroes.txt") {
 	ofstream out;
 	out.open(file);
 	for (auto h : v) {
@@ -248,24 +290,17 @@ int main() {
 		}
 		usleep(1'000'000/MAX_FPS);
 		if (battle) {
-			Menu fight;
-			fight.add_option("Hero", 3);
-			fight.add_option("Attack");
-			fight.add_option("Special 1");
-			fight.add_option("Special 2");
-			fight.add_option("Pass");
-			fight.add_option("Party");
 			option = 1;
-			fight.draw(option);
-			while(battle) {
-				ch = getch();
-				if (ch == DOWN || ch == UP) {
-					fight.control(ch, option);
+			shared_ptr<Hero> hero = heroes.at(0);
+			while (battle) {
+				fight_menu(option, hero);
+				if (option == 2 || option == 3) {
+					actor_select(heroes);
 				}
-				usleep(1'000'000/MAX_FPS);
-				if (ch == ENTER) {
-					if (option == 5)
-						party_menu(heroes);
+				else if (option == 5) {
+					party_menu(heroes);
+				}
+				else {
 					battle = false;
 				}
 			}

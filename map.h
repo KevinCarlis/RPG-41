@@ -232,4 +232,22 @@ class Menu {
 		mvaddch(rows.at(option), (DISPLAY-options.at(option).length())/2, '>');
 		refresh();
 	}
+	void actor_control(int ch, int &option) {
+		if (ch == DOWN) {
+			mvaddch(rows.at(option*2-1), (DISPLAY-options.at(option*2-1).length())/2, ' ');
+			if (option < options.size()/2)
+				option++;
+			else
+				option = 1;
+		}
+		else if (ch == UP) {
+			mvaddch(rows.at(option*2-1), (DISPLAY-options.at(option*2-1).length())/2, ' ');
+			if (option > 1)
+				option--;
+			else
+				option = options.size()/2;
+		}
+		mvaddch(rows.at(option*2-1), (DISPLAY-options.at(option*2-1).length())/2, '>');
+		refresh();
+	}
 };

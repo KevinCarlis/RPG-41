@@ -34,34 +34,6 @@ void turn_off_ncurses() {
 		return;
 }
 
-bool main_menu() {
-	Menu start;
-	start.add_option("Main Menu");
-	start.add_option("Continue");
-	start.add_option("Save");
-	start.add_option("Quit");
-	int option = 1;
-	start.draw(option);
-	while(true) {
-		int ch = getch();
-		if (ch == DOWN || ch == UP) {
-			start.control(ch, option);
-		}
-		usleep(1'000'000/MAX_FPS);
-		if (ch == ENTER) {
-			if (option == 1)
-				return false;
-			else if (option == 2) {
-				return true;
-			}
-			else {
-				turn_off_ncurses();
-				exit(EXIT_SUCCESS);
-			}
-		}
-	}
-}
-
 void party_menu(vector<shared_ptr<Hero>> v) {
 	Menu list;
 	list.add_option("Party");
@@ -105,6 +77,7 @@ vector<shared_ptr<Hero>> load_party(string file="heroes.txt") {
 	int currhp, temphp, mana;
 	for (int h = 0; h < 4; h++) {
 		in >> type;
+		if (!in) break;
 		in >> name;
 		in >> currhp;
 		in >> temphp;
@@ -123,6 +96,10 @@ int main() {
 	Map map;
 	int ch = getch();
 	int option = 1;
+	int x = Map::SIZE / 2, y = Map::SIZE / 2; //Start in middle of the world
+	int old_x = -1, old_y = -1;
+	int money = 0;
+	bool battle = false;
 	vector<shared_ptr<Hero>> heroes;
 
 	Menu select;
@@ -144,7 +121,21 @@ int main() {
 			break;
 		}
 	}
-	if (option == 1) {
+	bool save = false;
+	if (option == 2) {
+		save = map.load();
+		heroes = load_party();
+		ifstream in;
+		in.open("save.txt");
+		in >> money;
+		in >> x;
+		in >> y;
+		if (!in) save = false;
+		in.close();
+	}
+	if (option == 1 || !save || heroes.size() == 0) {
+		heroes.clear();
+		option = 1;
 		select.change_option(0, "Choose your Wizards");
 		select.change_option(1, "Earth Wizard", 3);
 		select.change_option(2, " Wizard");
@@ -184,32 +175,52 @@ int main() {
 		//}
 		map.init_map();
 	}
-	else if (option == 2) {
-		map.load();
-		heroes = load_party();
-		//TODO: write load game data functions
-	}
-	else {
+	else if (option == 3) {
 		turn_off_ncurses();
 		exit(EXIT_SUCCESS);
 	}
 
-	int x = Map::SIZE / 2, y = Map::SIZE / 2; //Start in middle of the world
-	int old_x = -1, old_y = -1;
-	int money = 0;
-	bool battle = false;
-	bool save = false;
 	while (true) {
 		ch = getch(); // Wait for user input, with TIMEOUT delay
 		if (ch == ERR) {;}
 		else if (ch == DOWN || ch == UP || ch == LEFT || ch == RIGHT)
 			map.control(ch, x, y);
 		else if (ch == 'q' || ch == 'Q') {
-			save = main_menu();
-			if (save) {
-				map.save();
-				save_party(heroes);
-				//TODO: write save game data;
+			Menu start;
+			start.add_option("Main Menu");
+			start.add_option("Continue");
+			start.add_option("Party");
+			start.add_option("Save");
+			start.add_option("Quit");
+			int option = 1;
+			start.draw(option);
+			while(true) {
+				int ch = getch();
+				if (ch == DOWN || ch == UP) {
+					start.control(ch, option);
+				}
+				usleep(1'000'000/MAX_FPS);
+				if (ch == ENTER) {
+					if (option == 1)
+						break;
+					if (option == 2) {
+						party_menu(heroes);
+						start.draw(option);
+					}
+					else if (option == 3) {
+						map.save();
+						save_party(heroes);
+						ofstream out;
+						out.open("save.txt");
+						out << money << '\t' << x << '\t' << y;
+						out.close();
+						break;
+					}
+					else {
+						turn_off_ncurses();
+						exit(EXIT_SUCCESS);
+					}
+				}
 			}
 			old_x -= 1;
 		}

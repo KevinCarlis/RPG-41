@@ -25,7 +25,7 @@ class Map {
 	void setTile(int x, int y, char type) {
 		map.at(y).at(x) = type;
 	}
-	void save(string filename="save.txt") {
+	void save(string filename="map.txt") {
 		ofstream outfile;
 		outfile.open(filename);
 		for (size_t i = 0; i < SIZE; i++) {
@@ -35,7 +35,7 @@ class Map {
 			outfile << endl;
 		}
 	}
-	void load(string filename="save.txt") {
+	bool load(string filename="map.txt") {
 		ifstream infile;
 		infile.open(filename);
 		map.clear();
@@ -44,8 +44,10 @@ class Map {
 		for (size_t i = 0; i < SIZE; i++) {
 			for (size_t j = 0; j < SIZE; j++) {
 				infile >> map.at(i).at(j);
+				if(!infile) return false;
 			}
 		}
+		return true;
 	}
 
 	static const char HERO     = 'H';

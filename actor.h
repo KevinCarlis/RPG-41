@@ -1,3 +1,5 @@
+#include <memory>
+
 /* Resource usage:
 	Resource hp(150);
 	hp -= 10;
@@ -80,16 +82,16 @@ class Actor {
 	protected:
 	string name;
 	int speed;
-	unsigned int damage;
+	unsigned int power;
 	Resource hp;
 	int color; //1: white, 2: blue, 3: green, 4: yellow, 5: red, 6:purple
 
 	public:
 	Actor() {;}
-	Actor(string userName, int userSpeed, unsigned int userDamage, unsigned int userHP, int userColor) {
+	Actor(string userName, int userSpeed, unsigned int userPower, unsigned int userHP, int userColor) {
 		name = userName;
 		speed = userSpeed;
-		damage = userDamage;
+		power = userPower;
 		hp = Resource(userHP);
 		color = userColor;
 	}
@@ -99,8 +101,8 @@ class Actor {
 	void SetSpeed(int userSpeed) {
 		speed = userSpeed;
 	}
-	void SetDamage(unsigned int userDamage) {
-		damage = userDamage;
+	void SetPower(unsigned int userPower) {
+		power = userPower;
 	}
 	void SetHP(unsigned int userMax=100, unsigned int userCurr=100, unsigned int userTemp=0) {
 		hp.SetMax(userMax);
@@ -116,8 +118,8 @@ class Actor {
 	int GetSpeed() const {
 		return speed;
 	}
-	unsigned int GetDamage() const {
-		return damage;
+	unsigned int GetPower() const {
+		return power;
 	}
 	Resource GetHP() const {
 		return hp;
@@ -125,9 +127,15 @@ class Actor {
 	int GetColor() const {
 		return color;
 	}
-	int attack(Actor* other) {
-		other->GetHP() -= damage;
-		return damage;
+	template <typename T>
+	bool attack(const shared_ptr<T> &other) const {
+		if (other->GetHP().GetCurr() <= 0)
+			return false;
+		other->damage(power);
+		return true;
+	}
+	void damage(const int d) {
+		hp -= d;
 	}
 	virtual string print() {
 		if (hp.GetTemp() > 0)
@@ -148,7 +156,7 @@ class GrimmyGoblim : public Monster {
 	GrimmyGoblim(string name="GrimmyGoblim") {
 		SetName(name);
 		SetSpeed(18);
-		SetDamage(15);
+		SetPower(15);
 		SetHP(95);
 	}
 };
@@ -183,8 +191,15 @@ class Hero: public Actor {
 	virtual string print() override {
 		return Actor::print() + " MP:" + to_string(mana.GetTotal());
 	}
-	virtual bool use_move1(){return true;};
-	virtual bool use_move2(){return true;};
+	virtual bool use_move1() {
+		return false;
+	}
+	virtual bool use_move1(vector<shared_ptr<Monster>> &enemies) {
+		return false;
+	}
+	virtual bool use_move2() {
+		return false;
+	}
 };
 
 class EarthWizard: public Hero {
@@ -192,24 +207,21 @@ class EarthWizard: public Hero {
 	EarthWizard(string userName="Frank", int currhp=120, int temphp=20, int currmana=95) {
 		SetName(userName);
 		SetSpeed(17);
-		SetDamage(25);
+		SetPower(25);
 		SetHP(120, currhp, temphp);
 		SetMana(95, currmana);
 		SetColor(3);
 		SetMove1("Boulder Barrage");
 		SetMove2("Rock Wall");
 	}
-	bool use_move1(int enemies, ...) {
+	virtual bool use_move1(vector<shared_ptr<Monster>> &enemies) override {
 		if (mana < 25) return false;
 		mana -= 25;
-		va_list valist;
-		va_start(valist, enemies);
-		for (int i = 0; i < enemies; i++)
-			va_arg(valist, Monster*)->GetHP() -= 15;
-		va_end(valist);
+		for (auto m : enemies)
+			m->damage(15);
 		return true;
 	}
-	bool use_move2() {
+	virtual bool use_move2() override {
 		if (mana < 20)
 			return false;
 		mana -= 20;

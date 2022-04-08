@@ -60,7 +60,7 @@ void fight_menu(int &option, shared_ptr<Hero> h) {
 }
 
 template <class T>
-shared_ptr<T> actor_select(vector<shared_ptr<T>> &v, int option=1) {
+void actor_select(vector<shared_ptr<T>> &v, int &option=1) {
 	Menu select;
 	select.add_option("Select Target");
 	for (int i = 0; i < v.size(); i++) {
@@ -75,7 +75,7 @@ shared_ptr<T> actor_select(vector<shared_ptr<T>> &v, int option=1) {
 		}
 		usleep(1'000'000/MAX_FPS);
 		if (ch == ENTER) {
-			return v.at(option-1);
+			return;
 		}
 	}
 }
@@ -135,7 +135,7 @@ vector<shared_ptr<Hero>> load_party(string file="heroes.txt") {
 	return v;
 }
 
-CircSLelement<shared_ptr<Actor>>* insert_actor(CircSLelement<shared_ptr<Actor>> *head, shared_ptr<Actor> a){
+CircSLelement<shared_ptr<Actor>>* insert_actor(CircSLelement<shared_ptr<Actor>> *head, shared_ptr<Actor> a) {
 	if (!head)
 		head = new CircSLelement<shared_ptr<Actor>> (a, a->GetName());
 	else {
@@ -176,7 +176,7 @@ int main() {
 	turn_on_ncurses();
 	turn_off_ncurses();
 	turn_on_ncurses();
-	
+
 	srand(time(NULL));
 
 	Map map;
@@ -353,30 +353,48 @@ int main() {
 				   return 0;
 				   */
 				curr = head;
+				int rounds = 0;
 				while (battle) {
+					bool end_turn = false;
+					option = 1;
 					vector<shared_ptr<Hero>>::iterator it;
 					it = find(heroes.begin(), heroes.end(), curr->getValue());
 					if (it != heroes.end()) {
 						shared_ptr<Hero> hero = heroes.at(it-heroes.begin());
-						fight_menu(option, hero);
-						if (option == 2 || option == 3) {
-							actor_select(heroes);
-						}
-						else if (option == 5) {
-							party_menu(heroes);
-						}
-						else {
-							;
+						while (!end_turn) {
+							fight_menu(option, hero);
+							if (option == 1) {
+								while (!end_turn) {
+									actor_select(villains, option);
+									end_turn = hero->attack(villains.at(option-1));
+								}
+							}
+							else if (option == 2) {
+								if (hero->GetMove1() == "Boulder Barrage")
+									end_turn = hero->use_move1(villains);
+							}
+							else if (option == 3) {
+								if (hero->GetMove2() == "Rock Wall")
+									end_turn = hero->use_move2();
+							}
+							else if (option == 4) {
+								end_turn = true;
+							}
+							else if (option == 5) {
+								party_menu(heroes);
+							}
 						}
 					}
-					else {
-						;//curr->getValue()->attack(heroes.at(rand()%4));
-					}
-					curr = curr->getNext();
-					if (curr == head)
-						battle = false;
+				else {
+					;//curr->getValue()->attack(heroes.at(rand()%4));
 				}
+				curr = curr->getNext();
+				if (curr == head)
+					rounds++;
+				if (rounds == 2)
+					battle = false;
 			}
 		}
-		//turn_off_ncurses();
 	}
+	turn_off_ncurses();
+}

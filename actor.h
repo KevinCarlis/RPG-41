@@ -126,10 +126,6 @@ class Actor {
 };
 
 class Monster: public Actor {
-	public:
-	//Monster() {
-	//	color = 5;
-	//}
 };
 
 class GrimmyGoblim : public Monster {

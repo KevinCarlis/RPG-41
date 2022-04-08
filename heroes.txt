@@ -1,4 +1,4 @@
-Frost	asd	105	15	108	
-Arcane	wqe	110	0	125	
-Fire	sad	90	35	112	
-Light	zxc	140	10	105	
+Arcane	Ted	111	0	51	
+Fire	Frank	90	0	39	
+Light	Jeff	137	0	105	
+Frost	Liam	70	0	29	

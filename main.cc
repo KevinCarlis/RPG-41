@@ -1,5 +1,6 @@
 //Put your name(s) here:
 //What bullet points did you do:
+//1,2,3,4,5, bonus 2
 #include "map.h"
 #include "circsl.h"
 #include <unistd.h>
@@ -118,6 +119,7 @@ void shop_menu(vector<shared_ptr<Hero>> &v, int &cash, int &bounty, bool &k) {
 			else if (option == 3 && bounty >= 10 && !k) {
 				bounty -= 20;
 				k = true;
+				return;
 			}
 			else if (option == 3 && bounty >= 10 && k) {
 				bounty -= 10;
@@ -249,6 +251,7 @@ int main() {
 		in.open("save.txt");
 		in >> money;
 		in >> skulls;
+		in >> key;
 		in >> x;
 		in >> y;
 		if (x > Map::SIZE-1 || y > Map::SIZE-1 || x < 0 || y < 0) {
@@ -335,7 +338,7 @@ int main() {
 							save_party(heroes);
 							ofstream out;
 							out.open("save.txt");
-							out << money << '\t' << skulls << '\t' << x << '\t' << y;
+							out << money << '\t' << skulls << '\t' << key << '\t' << x << '\t' << y;
 							out.close();
 							break;
 						}
@@ -434,15 +437,17 @@ int main() {
 								}
 							}
 							else if (option == 2) {
-								end_turn = hero->use_move1();
-								if (!end_turn)
-									end_turn = hero->use_move1(villains);
 								if (hero->move1 == "Ice Lance" || hero->move1 == "Arcane Missiles") {
 									option = 1;
 									actor_select(villains, option);
-									end_turn = hero->use_move1(villains.at(option-1));
+									if (option < villains.size()+1)
+										end_turn = hero->use_move1(villains.at(option-1));
 									option = 2;
 								}
+								else
+									end_turn = hero->use_move1();
+								if (!end_turn)
+									end_turn = hero->use_move1(villains);
 							}
 							else if (option == 3) {
 								end_turn = hero->use_move2();
@@ -451,7 +456,8 @@ int main() {
 								if (hero->move2 == "Snowfort") {
 									option = 1;
 									actor_select(heroes, option);
-									end_turn = hero->use_move2(heroes.at(option-1));
+									if (option < villains.size()+1)
+										end_turn = hero->use_move2(heroes.at(option-1));
 									option = 3;
 								}
 							}

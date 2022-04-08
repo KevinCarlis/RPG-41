@@ -1,14 +1,11 @@
 //Put your name(s) here:
 //What bullet points did you do:
 #include "map.h"
-#include "actor.h"
-#include "Bridges.h"
-#include "CircSLelement.h"
+#include "circsl.h"
 #include <unistd.h>
 #include <string>
 #include <memory>
 #include <time.h>
-using namespace bridges;
 
 const int MAX_FPS = 90; //Cap frame rate 
 const unsigned int TIMEOUT = 10; //Milliseconds to wait for a getch to finish
@@ -38,19 +35,20 @@ void turn_off_ncurses() {
 		return;
 }
 
-void fight_menu(int &option, shared_ptr<Hero> h) {
+void fight_menu(shared_ptr<Hero> h, int &option) {
 	Menu fight;
-	fight.add_option(h->GetName(), h->GetColor());
-	fight.add_option("Attack");
-	fight.add_option("Special 1");
-	fight.add_option("Special 2");
-	fight.add_option("Pass");
-	fight.add_option("Party");
-	fight.draw(option);
+	fight.add_option(h->name, h->color);
+	fight.add_option(h->print(),1,3);
+	fight.add_option("Attack", 1, 6);
+	fight.add_option(h->move1, 1, 9);
+	fight.add_option(h->move2, 1, 12);
+	fight.add_option("Pass", 1, 15);
+	fight.add_option("Party", 1, 18);
+	fight.draw(option, 5);
 	while (true) {
 		int ch = getch();
 		if (ch == DOWN || ch == UP) {
-			fight.control(ch, option);
+			fight.control(ch, option, 5);
 		}
 		usleep(1'000'000/MAX_FPS);
 		if (ch == ENTER) {
@@ -64,19 +62,74 @@ void actor_select(vector<shared_ptr<T>> &v, int &option=1) {
 	Menu select;
 	select.add_option("Select Target");
 	for (int i = 0; i < v.size(); i++) {
-		select.add_option(v.at(i)->GetName(), 1, i*3+5);
-		select.add_option(v.at(i)->print(),   1, i*3+6);
+		select.add_option(v.at(i)->name, 1, i*3+4);
+		select.add_option(v.at(i)->print(),   1, i*3+5);
 	}
-	select.draw(1);
+	select.add_option("Cancel", 1, 19);
+	select.draw(option*2-1);
 	while (true) {
 		int ch = getch();
 		if (ch == DOWN || ch == UP) {
 			select.actor_control(ch, option);
 		}
-		usleep(1'000'000/MAX_FPS);
-		if (ch == ENTER) {
+		else if (ch == ENTER) {
 			return;
 		}
+		usleep(1'000'000/MAX_FPS);
+	}
+}
+
+void shop_menu(vector<shared_ptr<Hero>> &v, int &cash, int &bounty, bool &k) {
+	int option = 1;
+	Menu shop;
+	shop.add_option("Megalo Mart");
+	shop.add_option("Heal party", 5, 5);
+	shop.add_option("50 gold", 1, 6);
+	shop.add_option("Restore Mana", 2, 8);
+	shop.add_option("50 gold", 1, 9);
+	if (!k) {
+		shop.add_option("Important Key", 3, 11);
+		shop.add_option("20 Skulls", 1, 12);
+	}
+	else {
+		shop.add_option("Protein Powder", 3, 11);
+		shop.add_option("10 Skulls", 1, 12);
+	}
+	shop.add_option("Leave", 1, 15);
+	shop.draw(option*2-1);
+	while (true) {
+		int ch = getch();
+		if (ch == DOWN || ch == UP) {
+			shop.actor_control(ch, option);
+		}
+		else if (ch == ENTER) {
+			if (option == 1 && cash >= 50) {
+				cash -= 50;
+				for (auto h: v)
+					h->hp.regen();
+				return;
+			}
+			else if (option == 2 && cash >= 50) {
+				cash -= 50;
+				for (auto h: v)
+					h->mana.regen();
+				return;
+			}
+			else if (option == 3 && bounty >= 10 && !k) {
+				bounty -= 20;
+				k = true;
+			}
+			else if (option == 3 && bounty >= 10 && k) {
+				bounty -= 10;
+				for (auto h: v)
+					h->power += 1;
+				return;
+			}
+			else if (option == 4) {
+				return;
+			}
+		}
+		usleep(1'000'000/MAX_FPS);
 	}
 }
 
@@ -84,7 +137,7 @@ void party_menu(vector<shared_ptr<Hero>> &v) {
 	Menu list;
 	list.add_option("Party");
 	for (int i = 0; i < v.size(); i++) {
-		list.add_option(v.at(i)->GetName(), 1, i*3+5);
+		list.add_option(v.at(i)->name, 1, i*3+5);
 		list.add_option(v.at(i)->print(), 1, i*3+6);
 	}
 	list.add_option("Exit", 1, 19);
@@ -103,12 +156,20 @@ void save_party(vector<shared_ptr<Hero>> &v, string file="heroes.txt") {
 	ofstream out;
 	out.open(file);
 	for (auto h : v) {
-		if (h->GetMove1()=="Boulder Barrage")
+		if (h->move1=="Ice Lance")
+			out << "Frost" << '\t';
+		else if (h->move1=="Boulder Barrage")
 			out << "Earth" << '\t';
-		out << h->GetName() << '\t';
-		out << h->GetHP().GetCurr() << '\t';
-		out << h->GetHP().GetTemp() << '\t';
-		out << h->GetMana().GetCurr() << '\t';
+		else if (h->move1=="Self Lighteous")
+			out << "Light" << '\t';
+		else if (h->move1=="Firestorm")
+			out << "Fire" << '\t';
+		else //if (h->move1=="Arcane Missiles")
+			out << "Arcane" << '\t';
+		out << h->name << '\t';
+		out << h->GetHP() << '\t';
+		out << h->GetShield() << '\t';
+		out << h->GetMana() << '\t';
 		out << endl;
 	}
 	out.close();
@@ -128,48 +189,19 @@ vector<shared_ptr<Hero>> load_party(string file="heroes.txt") {
 		in >> currhp;
 		in >> temphp;
 		in >> mana;
-		if (type == "Earth")
+		if (type == "Frost")
+			hero = make_shared<FrostWizard>(name, currhp, temphp, mana);
+		else if (type == "Earth")
 			hero = make_shared<EarthWizard>(name, currhp, temphp, mana);
+		else if (type == "Light")
+			hero = make_shared<LightWizard>(name, currhp, temphp, mana);
+		else if (type == "Fire")
+			hero = make_shared<FireWizard>(name, currhp, temphp, mana);
+		else //if (type == "Arcane")
+			hero = make_shared<ArcaneWizard>(name, currhp, temphp, mana);
 		v.push_back(hero);
 	}
 	return v;
-}
-
-CircSLelement<shared_ptr<Actor>>* insert_actor(CircSLelement<shared_ptr<Actor>> *head, shared_ptr<Actor> a) {
-	if (!head)
-		head = new CircSLelement<shared_ptr<Actor>> (a, a->GetName());
-	else {
-		CircSLelement<shared_ptr<Actor>> *curr = head;
-		CircSLelement<shared_ptr<Actor>> *in = new CircSLelement<shared_ptr<Actor>> (a, a->GetName());
-		if (a->GetSpeed() > head->getValue()->GetSpeed()) {
-			while (true) {
-				if (curr->getNext() == head) {
-					curr->setNext(in);
-					break;
-				}
-				curr = curr->getNext();
-			}
-			in->setNext(head);
-			head = in;
-		}
-		else {
-			while (true) {
-				if (curr->getNext() == head) {
-					curr->setNext(in);
-					in->setNext(head);
-					break;
-				}
-				else if (a->GetSpeed() > curr->getNext()->getValue()->GetSpeed()) {
-					in->setNext(curr->getNext());
-					curr->setNext(in);
-					break;
-				}
-				else 
-					curr = curr->getNext();
-			}
-		}
-	}
-	return head;
 }
 
 int main() {
@@ -185,7 +217,10 @@ int main() {
 	int x = Map::SIZE / 2, y = Map::SIZE / 2; //Start in middle of the world
 	int old_x = -1, old_y = -1;
 	int money = 0;
+	int skulls = 0;
+	bool key = false;
 	bool battle = false;
+	bool boss = false;
 	vector<shared_ptr<Hero>> heroes;
 	vector<shared_ptr<Monster>> villains;
 
@@ -201,8 +236,6 @@ int main() {
 		if (ch == DOWN || ch == UP) {
 			select.control(ch, option);
 		}
-		//if(ch != ERR)
-		//mvprintw(0, 25, to_string(ch).c_str()); //figure out key value
 		usleep(1'000'000/MAX_FPS);
 		if (ch == ENTER) {
 			break;
@@ -215,6 +248,7 @@ int main() {
 		ifstream in;
 		in.open("save.txt");
 		in >> money;
+		in >> skulls;
 		in >> x;
 		in >> y;
 		if (x > Map::SIZE-1 || y > Map::SIZE-1 || x < 0 || y < 0) {
@@ -227,12 +261,12 @@ int main() {
 	if (option == 1 || !save || heroes.size() == 0) {
 		heroes.clear();
 		option = 1;
-		select.change_option(0, "Choose your Wizards");
-		select.change_option(1, "Earth Wizard", 3);
-		select.change_option(2, " Wizard");
-		select.change_option(3, " Wizard", 4);
-		select.add_option(" Wizard", 5);
-		select.add_option(" Wizard", 6);
+		select.change_option(0, "Choose your Wizards", 1);
+		select.change_option(1, "Frost Wizard", 2);
+		select.change_option(2, "Earth Wizard", 3);
+		select.change_option(3, "Light Wizard", 4);
+		select.add_option("Fire Wizard", 5);
+		select.add_option("Arcane Wizard", 6);
 		select.draw(option);
 
 		int h = 0;
@@ -249,13 +283,16 @@ int main() {
 				cout << "Enter a name:" << endl;
 				cin >> name;
 				turn_on_ncurses();
-				//if (option == 1) {
-				shared_ptr<Hero> hero = make_shared<EarthWizard>(name);
-				//else if (option == 2)//TODO: Add classes
-				//else if (option == 3)
-				//else if (option == 4)
-				//else
-				heroes.push_back(hero);
+				if (option == 1)
+					heroes.push_back(make_shared<FrostWizard>(name));
+				else if (option == 2)
+					heroes.push_back(make_shared<EarthWizard>(name));
+				else if (option == 3)
+					heroes.push_back(make_shared<LightWizard>(name));
+				else if (option == 4)
+					heroes.push_back(make_shared<FireWizard>(name));
+				else
+					heroes.push_back(make_shared<ArcaneWizard>(name));
 				select.draw(option);
 			}
 			}
@@ -278,7 +315,7 @@ int main() {
 				start.add_option("Party");
 				start.add_option("Save");
 				start.add_option("Quit");
-				int option = 1;
+				option = 1;
 				start.draw(option);
 				while(true) {
 					int ch = getch();
@@ -298,7 +335,7 @@ int main() {
 							save_party(heroes);
 							ofstream out;
 							out.open("save.txt");
-							out << money << '\t' << x << '\t' << y;
+							out << money << '\t' << skulls << '\t' << x << '\t' << y;
 							out.close();
 							break;
 						}
@@ -315,6 +352,19 @@ int main() {
 					map.setTile(x,y,Map::OPEN);
 					money += 10;
 				}
+				if (map.getTile(x,y) == Map::GATE) {
+					if (key)
+						map.setTile(x,y,Map::OPEN);
+					else {
+						x = old_x;
+						y = old_y;
+					}
+				}
+				if (map.getTile(x,y) == Map::SHOP) {
+					shop_menu(heroes, money, skulls, key);
+					x = old_x;
+					y = old_y;
+				}
 				if (map.getTile(x,y) == Map::WATER || map.getTile(x,y) == Map::WALL) {
 					x = old_x;
 					y = old_y;
@@ -323,10 +373,16 @@ int main() {
 					battle = true;
 					map.setTile(x,y,Map::OPEN);
 				}
+				else if (map.getTile(x,y) == Map::BOSS) {
+					boss = true;
+					battle = true;
+					map.setTile(x,y,Map::OPEN);
+				}
 				else {
 					map.draw(x,y);
 					mvprintw(DISPLAY+1,0,"X: %i Y: %i\n",x,y);
 					mvprintw(DISPLAY+2,0,"Money: %i\n",money);
+					mvprintw(DISPLAY+3,0,"Skulls: %i\n",skulls);
 					refresh();
 					old_x = x;
 					old_y = y;
@@ -334,48 +390,70 @@ int main() {
 			}
 			usleep(1'000'000/MAX_FPS);
 			if (battle) {
-				turn_off_ncurses();
+				vector<shared_ptr<Hero>> heros;
 				option = 1;
-				for (int i = 0; i < 5; i++)
-					villains.push_back(make_shared<GrimmyGoblim>("GrimmyGoblim" + to_string(i+1)));
+				if (boss) {
+					for (int i = 0; i < 2; i++)
+						villains.push_back(make_shared<GrimmyGoblim>("GrimmyGoblim" + to_string(i+1), rand()%5, rand()%5, rand()%12));
+
+					villains.push_back(make_shared<SunGuy>("SrSun", rand()%12, rand()%5, rand()%42));
+				}
+				else {
+					for (int i = 0; i < 3+rand()%2; i++)
+						villains.push_back(make_shared<GrimmyGoblim>("GrimmyGoblim" + to_string(i+1), rand()%5, rand()%5, rand()%12));
+				}
 				CircSLelement<shared_ptr<Actor>> *head = nullptr;
 				CircSLelement<shared_ptr<Actor>> *curr;
-				for (auto h: heroes)
+				for (auto h: heroes) {
 					head = insert_actor(head, h);
+					heros.push_back(h);
+				}
 				for (auto v: villains)
 					head = insert_actor(head, v);
-				/*
-				   curr = head;
-				   do {
-				   cout << curr->getValue()->GetName() << endl;
-				   curr = curr->getNext();
-				   } while (curr != head);
-				   return 0;
-				   */
+				skulls += 1 + rand() % (villains.size() - 1);
 				curr = head;
 				int rounds = 0;
 				while (battle) {
 					bool end_turn = false;
 					option = 1;
 					vector<shared_ptr<Hero>>::iterator it;
-					it = find(heroes.begin(), heroes.end(), curr->getValue());
-					if (it != heroes.end()) {
-						shared_ptr<Hero> hero = heroes.at(it-heroes.begin());
-						while (!end_turn) {
-							fight_menu(option, hero);
+					it = find(heros.begin(), heros.end(), curr->getValue());
+					if (it != heros.end()) {
+						shared_ptr<Hero> hero = heros.at(it-heros.begin());
+						while (!end_turn && hero->GetHP()) {
+							fight_menu(hero, option);
 							if (option == 1) {
 								while (!end_turn) {
 									actor_select(villains, option);
-									end_turn = hero->attack(villains.at(option-1));
+									if (option-1 < villains.size())
+										end_turn = hero->attack(villains.at(option-1));
+									else {
+										option = 1;
+										break;
+									}
 								}
 							}
 							else if (option == 2) {
-								if (hero->GetMove1() == "Boulder Barrage")
+								end_turn = hero->use_move1();
+								if (!end_turn)
 									end_turn = hero->use_move1(villains);
+								if (hero->move1 == "Ice Lance" || hero->move1 == "Arcane Missiles") {
+									option = 1;
+									actor_select(villains, option);
+									end_turn = hero->use_move1(villains.at(option-1));
+									option = 2;
+								}
 							}
 							else if (option == 3) {
-								if (hero->GetMove2() == "Rock Wall")
-									end_turn = hero->use_move2();
+								end_turn = hero->use_move2();
+								if (!end_turn)
+									end_turn = hero->use_move2(heroes);
+								if (hero->move2 == "Snowfort") {
+									option = 1;
+									actor_select(heroes, option);
+									end_turn = hero->use_move2(heroes.at(option-1));
+									option = 3;
+								}
 							}
 							else if (option == 4) {
 								end_turn = true;
@@ -385,16 +463,48 @@ int main() {
 							}
 						}
 					}
-				else {
-					;//curr->getValue()->attack(heroes.at(rand()%4));
+					else {
+						while(!end_turn) {
+							end_turn = curr->getValue()->attack(heros.at(rand()%heros.size()));
+						}
+					}
+					curr = curr->getNext();
+					for (int i =  0; i < villains.size(); i++) {
+						if (villains.at(i)->GetHP() < 1) {
+							if (curr->getValue() == villains.at(i))
+								curr = curr->getNext();
+							head = remove_actor(head, villains.at(i));
+							villains.erase(villains.begin()+i);
+						}
+					}
+					for (int i = 0; i < heros.size(); i++) {
+						if (heros.at(i)->GetHP() == 0) {
+							if (curr->getValue() == heros.at(i))
+								curr = curr->getNext();
+							head = remove_actor(head, heros.at(i));
+							heros.erase(heros.begin() + i);
+						}
+					}
+					if (villains.empty()) {
+						for (auto h: heroes) {
+							h->hp.regen();
+							h->mana.regen();
+						}
+						battle = false;
+						if (boss) {
+							turn_off_ncurses();
+							cout << "YOU WIN" << endl;
+							exit(0);
+						}
+					}
+					if(heros.empty()) {
+						turn_off_ncurses();
+						cout << "YOU LOSE" << endl;
+						exit(0);
+					}
 				}
-				curr = curr->getNext();
-				if (curr == head)
-					rounds++;
-				if (rounds == 2)
-					battle = false;
+				villains.clear();
 			}
 		}
+		turn_off_ncurses();
 	}
-	turn_off_ncurses();
-}

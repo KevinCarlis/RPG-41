@@ -1,4 +1,4 @@
-Earth	Ted	120	20	95	
-Earth	Frenk	120	20	95	
-Earth	Jef	120	20	95	
-Earth	Lurr	120	20	95	
+Frost	asd	105	15	108	
+Arcane	wqe	110	0	125	
+Fire	sad	90	35	112	
+Light	zxc	140	10	105	

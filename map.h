@@ -52,10 +52,13 @@ class Map {
 
 	static const char HERO     = 'H';
 	static const char MONSTER  = 'M';
+	static const char BOSS     = 'B';
+	static const char GATE     = '@';
 	static const char WALL     = '#';
 	static const char WATER    = '~';
 	static const char OPEN     = '.';
 	static const char TREASURE = '$';
+	static const char SHOP     = 'S';
 	static const size_t SIZE = 100; //World is a 100x100 map
 	//Randomly generate map
 	void init_map() {
@@ -91,7 +94,33 @@ class Map {
 				}
 			}
 		}
+		add_boss();
+		add_shop();
 	}
+	void add_boss(int x=SIZE/2, int y=2) {
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				map.at(y-j+1).at(x-i+1) = WALL;
+			}
+			map.at(y+2).at(x-i+1) = OPEN;
+		}
+		map.at(y).at(x) = BOSS;
+		map.at(y+1).at(x) = GATE;
+	}
+	void add_shop(int x=20, int y=SIZE-SIZE/4) {
+		for (int i = 0; i < 7; i++) {
+			for (int j = 0; j < 7; j++) {
+				if (i == 0 || j == 0 ||  i == 6 || j == 6)
+					map.at(y-j+3).at(x-i+3) = OPEN;
+				else if (i == 1 || j == 1 ||  i == 5 || j == 5)
+					map.at(y-j+3).at(x-i+3) = WALL;
+				else
+					map.at(y-j+3).at(x-i+3) = SHOP;
+			}
+		}
+		map.at(y+2).at(x) = OPEN;
+	}
+		
 	//Draw the DISPLAY tiles around coordinate (x,y)
 	void draw(int x, int y) const {
 		int start_x = x - DISPLAY/2;
@@ -194,7 +223,7 @@ class Menu {
 	void change_color(int opt, int color) {
 		colors.at(opt) = color;
 	}
-	void draw(int option=-1) const {
+	void draw(int option=-1, int selectable=-1) const {
 		clear();
 		for (size_t i = 0; i < DISPLAY; i++) {
 			mvaddch(0,i+1,'_');
@@ -209,29 +238,38 @@ class Menu {
 				mvprintw(rows.at(i), (DISPLAY-options.at(i).length())/2+1, options.at(i).c_str());
 				attroff(COLOR_PAIR(colors.at(i)));
 			}
-			if (options.size() > 1 && option != -1)
-				mvaddch(rows.at(option), (DISPLAY-options.at(option).length())/2, '>');
+			if (options.size() > 1 && option != -1) {
+				if (selectable == -1)
+					selectable = options.size() - 1;
+				int i = options.size() - selectable + option - 1;
+				mvaddch(rows.at(i), (DISPLAY-options.at(i).length())/2, '>');
+			}
 		}
 		refresh();
 	}
-	void control(int ch, int &option) {
+	void control(int ch, int &option, int selectable=-1) {
+		if (selectable == -1)
+			selectable = options.size() - 1;
+		int i = options.size() - selectable + option - 1;
 		if (ch == DOWN) {
-			mvaddch(rows.at(option), (DISPLAY-options.at(option).length())/2, ' ');
-			if (option < options.size() - 1)
+			mvaddch(rows.at(i), (DISPLAY-options.at(i).length())/2, ' ');
+			if (option < selectable)
 				option++;
 			else
 				option = 1;
 		}
 		else if (ch == UP) {
-			mvaddch(rows.at(option), (DISPLAY-options.at(option).length())/2, ' ');
+			mvaddch(rows.at(i), (DISPLAY-options.at(i).length())/2, ' ');
 			if (option > 1)
 				option--;
 			else
-				option = options.size() - 1;
+				option = selectable;
 		}
-		mvaddch(rows.at(option), (DISPLAY-options.at(option).length())/2, '>');
+		i = options.size() - selectable + option - 1;
+		mvaddch(rows.at(i), (DISPLAY-options.at(i).length())/2, '>');
 		refresh();
 	}
+
 	void actor_control(int ch, int &option) {
 		if (ch == DOWN) {
 			mvaddch(rows.at(option*2-1), (DISPLAY-options.at(option*2-1).length())/2, ' ');

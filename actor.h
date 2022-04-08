@@ -80,16 +80,16 @@ class Actor {
 	protected:
 	string name;
 	int speed;
-	unsigned int attack;
+	unsigned int damage;
 	Resource hp;
 	int color; //1: white, 2: blue, 3: green, 4: yellow, 5: red, 6:purple
 
 	public:
 	Actor() {;}
-	Actor(string userName, int userSpeed, unsigned int userAttack, unsigned int userHP, int userColor) {
+	Actor(string userName, int userSpeed, unsigned int userDamage, unsigned int userHP, int userColor) {
 		name = userName;
 		speed = userSpeed;
-		attack = userAttack;
+		damage = userDamage;
 		hp = Resource(userHP);
 		color = userColor;
 	}
@@ -99,8 +99,8 @@ class Actor {
 	void SetSpeed(int userSpeed) {
 		speed = userSpeed;
 	}
-	void SetAttack(unsigned int userAttack) {
-		attack = userAttack;
+	void SetDamage(unsigned int userDamage) {
+		damage = userDamage;
 	}
 	void SetHP(unsigned int userMax=100, unsigned int userCurr=100, unsigned int userTemp=0) {
 		hp.SetMax(userMax);
@@ -116,14 +116,18 @@ class Actor {
 	int GetSpeed() const {
 		return speed;
 	}
-	unsigned int GetAttack() const {
-		return attack;
+	unsigned int GetDamage() const {
+		return damage;
 	}
 	Resource GetHP() const {
 		return hp;
 	}
 	int GetColor() const {
 		return color;
+	}
+	int attack(Actor* other) {
+		other->GetHP() -= damage;
+		return damage;
 	}
 	virtual string print() {
 		if (hp.GetTemp() > 0)
@@ -141,10 +145,10 @@ class Monster: public Actor {
 
 class GrimmyGoblim : public Monster {
 	public:
-	GrimmyGoblim() {
-		SetName("GrimmyGoblim");
+	GrimmyGoblim(string name="GrimmyGoblim") {
+		SetName(name);
 		SetSpeed(18);
-		SetAttack(15);
+		SetDamage(15);
 		SetHP(95);
 	}
 };
@@ -188,7 +192,7 @@ class EarthWizard: public Hero {
 	EarthWizard(string userName="Frank", int currhp=120, int temphp=20, int currmana=95) {
 		SetName(userName);
 		SetSpeed(17);
-		SetAttack(25);
+		SetDamage(25);
 		SetHP(120, currhp, temphp);
 		SetMana(95, currmana);
 		SetColor(3);

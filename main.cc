@@ -2,9 +2,13 @@
 //What bullet points did you do:
 #include "map.h"
 #include "actor.h"
+#include "Bridges.h"
+#include "CircSLelement.h"
 #include <unistd.h>
 #include <string>
 #include <memory>
+#include <time.h>
+using namespace bridges;
 
 const int MAX_FPS = 90; //Cap frame rate 
 const unsigned int TIMEOUT = 10; //Milliseconds to wait for a getch to finish
@@ -34,7 +38,7 @@ void turn_off_ncurses() {
 		return;
 }
 
-void fight_menu(int &option, shared_ptr<Hero> &h) {
+void fight_menu(int &option, shared_ptr<Hero> h) {
 	Menu fight;
 	fight.add_option(h->GetName(), h->GetColor());
 	fight.add_option("Attack");
@@ -131,10 +135,50 @@ vector<shared_ptr<Hero>> load_party(string file="heroes.txt") {
 	return v;
 }
 
+CircSLelement<shared_ptr<Actor>>* insert_actor(CircSLelement<shared_ptr<Actor>> *head, shared_ptr<Actor> a){
+	if (!head)
+		head = new CircSLelement<shared_ptr<Actor>> (a, a->GetName());
+	else {
+		CircSLelement<shared_ptr<Actor>> *curr = head;
+		CircSLelement<shared_ptr<Actor>> *in = new CircSLelement<shared_ptr<Actor>> (a, a->GetName());
+		if (a->GetSpeed() > head->getValue()->GetSpeed()) {
+			while (true) {
+				if (curr->getNext() == head) {
+					curr->setNext(in);
+					break;
+				}
+				curr = curr->getNext();
+			}
+			in->setNext(head);
+			head = in;
+		}
+		else {
+			while (true) {
+				if (curr->getNext() == head) {
+					curr->setNext(in);
+					in->setNext(head);
+					break;
+				}
+				else if (a->GetSpeed() > curr->getNext()->getValue()->GetSpeed()) {
+					in->setNext(curr->getNext());
+					curr->setNext(in);
+					break;
+				}
+				else 
+					curr = curr->getNext();
+			}
+		}
+	}
+	return head;
+}
+
 int main() {
 	turn_on_ncurses();
 	turn_off_ncurses();
 	turn_on_ncurses();
+	
+	srand(time(NULL));
+
 	Map map;
 	int ch = getch();
 	int option = 1;
@@ -143,6 +187,7 @@ int main() {
 	int money = 0;
 	bool battle = false;
 	vector<shared_ptr<Hero>> heroes;
+	vector<shared_ptr<Monster>> villains;
 
 	Menu select;
 	select.add_option("Game Title", 5);
@@ -157,7 +202,7 @@ int main() {
 			select.control(ch, option);
 		}
 		//if(ch != ERR)
-			//mvprintw(0, 25, to_string(ch).c_str()); //figure out key value
+		//mvprintw(0, 25, to_string(ch).c_str()); //figure out key value
 		usleep(1'000'000/MAX_FPS);
 		if (ch == ENTER) {
 			break;
@@ -172,6 +217,10 @@ int main() {
 		in >> money;
 		in >> x;
 		in >> y;
+		if (x > Map::SIZE-1 || y > Map::SIZE-1 || x < 0 || y < 0) {
+			x = Map::SIZE/2;
+			y = Map::SIZE/2;
+		}
 		if (!in) save = false;
 		in.close();
 	}
@@ -195,7 +244,6 @@ int main() {
 			usleep(1'000'000/MAX_FPS);
 			if (ch == ENTER) {
 				h++;
-				//select.change_option(0, ("Select Hero " + to_string(heroes + 1)).c_str());
 				turn_off_ncurses();
 				string name;
 				cout << "Enter a name:" << endl;
@@ -210,101 +258,125 @@ int main() {
 				heroes.push_back(hero);
 				select.draw(option);
 			}
+			}
+			map.init_map();
 		}
-		//for (auto h: heroes) {
-		//	cout << h->GetName() << endl;
-		//	cout << h->print() << endl << endl;
-		//}
-		map.init_map();
-	}
-	else if (option == 3) {
-		turn_off_ncurses();
-		exit(EXIT_SUCCESS);
-	}
+		else if (option == 3) {
+			turn_off_ncurses();
+			exit(EXIT_SUCCESS);
+		}
 
-	while (true) {
-		ch = getch(); // Wait for user input, with TIMEOUT delay
-		if (ch == ERR) {;}
-		else if (ch == DOWN || ch == UP || ch == LEFT || ch == RIGHT)
-			map.control(ch, x, y);
-		else if (ch == 'q' || ch == 'Q') {
-			Menu start;
-			start.add_option("Main Menu");
-			start.add_option("Continue");
-			start.add_option("Party");
-			start.add_option("Save");
-			start.add_option("Quit");
-			int option = 1;
-			start.draw(option);
-			while(true) {
-				int ch = getch();
-				if (ch == DOWN || ch == UP) {
-					start.control(ch, option);
-				}
-				usleep(1'000'000/MAX_FPS);
-				if (ch == ENTER) {
-					if (option == 1)
-						break;
-					if (option == 2) {
-						party_menu(heroes);
-						start.draw(option);
+		while (true) {
+			ch = getch(); // Wait for user input, with TIMEOUT delay
+			if (ch == ERR) {;}
+			else if (ch == DOWN || ch == UP || ch == LEFT || ch == RIGHT)
+				map.control(ch, x, y);
+			else if (ch == 'q' || ch == 'Q') {
+				Menu start;
+				start.add_option("Main Menu");
+				start.add_option("Continue");
+				start.add_option("Party");
+				start.add_option("Save");
+				start.add_option("Quit");
+				int option = 1;
+				start.draw(option);
+				while(true) {
+					int ch = getch();
+					if (ch == DOWN || ch == UP) {
+						start.control(ch, option);
 					}
-					else if (option == 3) {
-						map.save();
-						save_party(heroes);
-						ofstream out;
-						out.open("save.txt");
-						out << money << '\t' << x << '\t' << y;
-						out.close();
-						break;
-					}
-					else {
-						turn_off_ncurses();
-						exit(EXIT_SUCCESS);
+					usleep(1'000'000/MAX_FPS);
+					if (ch == ENTER) {
+						if (option == 1)
+							break;
+						if (option == 2) {
+							party_menu(heroes);
+							start.draw(option);
+						}
+						else if (option == 3) {
+							map.save();
+							save_party(heroes);
+							ofstream out;
+							out.open("save.txt");
+							out << money << '\t' << x << '\t' << y;
+							out.close();
+							break;
+						}
+						else {
+							turn_off_ncurses();
+							exit(EXIT_SUCCESS);
+						}
 					}
 				}
+				old_x -= 1;
 			}
-			old_x -= 1;
-		}
-		if (x != old_x || y != old_y) {
-			if (map.getTile(x,y) == Map::TREASURE) {
-				map.setTile(x,y,Map::OPEN);
-				money += 10;
-			}
-			if (map.getTile(x,y) == Map::WATER || map.getTile(x,y) == Map::WALL) {
-				x = old_x;
-				y = old_y;
-			}
-			else if (map.getTile(x,y) == Map::MONSTER) {
-				battle = true;
-				map.setTile(x,y,Map::OPEN);
-			}
-			else {
-				map.draw(x,y);
-				mvprintw(DISPLAY+1,0,"X: %i Y: %i\n",x,y);
-				mvprintw(DISPLAY+2,0,"Money: %i\n",money);
-				refresh();
-				old_x = x;
-				old_y = y;
-			}
-		}
-		usleep(1'000'000/MAX_FPS);
-		if (battle) {
-			option = 1;
-			shared_ptr<Hero> hero = heroes.at(0);
-			while (battle) {
-				fight_menu(option, hero);
-				if (option == 2 || option == 3) {
-					actor_select(heroes);
+			if (x != old_x || y != old_y) {
+				if (map.getTile(x,y) == Map::TREASURE) {
+					map.setTile(x,y,Map::OPEN);
+					money += 10;
 				}
-				else if (option == 5) {
-					party_menu(heroes);
+				if (map.getTile(x,y) == Map::WATER || map.getTile(x,y) == Map::WALL) {
+					x = old_x;
+					y = old_y;
+				}
+				else if (map.getTile(x,y) == Map::MONSTER) {
+					battle = true;
+					map.setTile(x,y,Map::OPEN);
 				}
 				else {
-					battle = false;
+					map.draw(x,y);
+					mvprintw(DISPLAY+1,0,"X: %i Y: %i\n",x,y);
+					mvprintw(DISPLAY+2,0,"Money: %i\n",money);
+					refresh();
+					old_x = x;
+					old_y = y;
+				}
+			}
+			usleep(1'000'000/MAX_FPS);
+			if (battle) {
+				turn_off_ncurses();
+				option = 1;
+				for (int i = 0; i < 5; i++)
+					villains.push_back(make_shared<GrimmyGoblim>("GrimmyGoblim" + to_string(i+1)));
+				CircSLelement<shared_ptr<Actor>> *head = nullptr;
+				CircSLelement<shared_ptr<Actor>> *curr;
+				for (auto h: heroes)
+					head = insert_actor(head, h);
+				for (auto v: villains)
+					head = insert_actor(head, v);
+				/*
+				   curr = head;
+				   do {
+				   cout << curr->getValue()->GetName() << endl;
+				   curr = curr->getNext();
+				   } while (curr != head);
+				   return 0;
+				   */
+				curr = head;
+				while (battle) {
+					vector<shared_ptr<Hero>>::iterator it;
+					it = find(heroes.begin(), heroes.end(), curr->getValue());
+					if (it != heroes.end()) {
+						shared_ptr<Hero> hero = heroes.at(it-heroes.begin());
+						fight_menu(option, hero);
+						if (option == 2 || option == 3) {
+							actor_select(heroes);
+						}
+						else if (option == 5) {
+							party_menu(heroes);
+						}
+						else {
+							;
+						}
+					}
+					else {
+						;//curr->getValue()->attack(heroes.at(rand()%4));
+					}
+					curr = curr->getNext();
+					if (curr == head)
+						battle = false;
 				}
 			}
 		}
+		//turn_off_ncurses();
 	}
-	turn_off_ncurses();
-}

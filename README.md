@@ -4,9 +4,9 @@
 
 ==============================
 
-Requirements
-~~~~~~~~~~~~
-Bridges UNCC Client
+Requirements <br/>
+\~~~~~~~~~~~~ <br/>
+Bridges UNCC Client <br/>
 https://bridgesuncc.github.io/
 
 Ncurses

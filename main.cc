@@ -38,18 +38,18 @@ void turn_off_ncurses() {
 
 void fight_menu(shared_ptr<Hero> h, int &option) {
 	Menu fight;
-	fight.add_option(h->name, h->color);
-	fight.add_option(h->print(),1,3);
-	fight.add_option("Attack", 1, 6);
-	fight.add_option(h->move1, 1, 9);
-	fight.add_option(h->move2, 1, 12);
-	fight.add_option("Pass", 1, 15);
-	fight.add_option("Party", 1, 18);
-	fight.draw(option, 5);
+	fight.add_option(h->name,    false, h->color);
+	fight.add_option(h->print(), false, 1, 3);
+	fight.add_option("Attack",   true,  1, 6);
+	fight.add_option(h->move1,   true,  1, 9);
+	fight.add_option(h->move2,   true,  1, 12);
+	fight.add_option("Pass",     true,  1, 15);
+	fight.add_option("Party",    true,  1, 18);
+	fight.draw(true, option);
 	while (true) {
 		int ch = getch();
 		if (ch == DOWN || ch == UP) {
-			fight.control(ch, option, 5);
+			fight.change(ch, option);
 		}
 		usleep(1'000'000/MAX_FPS);
 		if (ch == ENTER) {
@@ -61,17 +61,17 @@ void fight_menu(shared_ptr<Hero> h, int &option) {
 template <class T>
 void actor_select(vector<shared_ptr<T>> &v, int &option=1) {
 	Menu select;
-	select.add_option("Select Target");
+	select.add_option("Select Target", false);
 	for (int i = 0; i < v.size(); i++) {
-		select.add_option(v.at(i)->name, 1, i*3+4);
-		select.add_option(v.at(i)->print(),   1, i*3+5);
+		select.add_option(v.at(i)->name,     true, v.at(i)->color, i*3+4);
+		select.add_option(v.at(i)->print(), false, 1,              i*3+5);
 	}
-	select.add_option("Cancel", 1, 19);
-	select.draw(option*2-1);
+	select.add_option("Cancel", true, 1, 19);
+	select.draw();
 	while (true) {
 		int ch = getch();
 		if (ch == DOWN || ch == UP) {
-			select.actor_control(ch, option);
+			select.change(ch, option);
 		}
 		else if (ch == ENTER) {
 			return;
@@ -83,25 +83,25 @@ void actor_select(vector<shared_ptr<T>> &v, int &option=1) {
 void shop_menu(vector<shared_ptr<Hero>> &v, int &cash, int &bounty, bool &k) {
 	int option = 1;
 	Menu shop;
-	shop.add_option("Megalo Mart");
-	shop.add_option("Heal party", 5, 5);
-	shop.add_option("50 gold", 1, 6);
-	shop.add_option("Restore Mana", 2, 8);
-	shop.add_option("50 gold", 1, 9);
+	shop.add_option("Megalo Mart", false);
+	shop.add_option("Heal party",   true, 5, 5);
+	shop.add_option("50 gold",     false, 1, 6);
+	shop.add_option("Restore Mana", true, 2, 8);
+	shop.add_option("50 gold",     false, 1, 9);
 	if (!k) {
-		shop.add_option("Important Key", 3, 11);
-		shop.add_option("20 Skulls", 1, 12);
+		shop.add_option("Important Key", true, 3, 11);
+		shop.add_option("20 Skulls", false, 1, 12);
 	}
 	else {
-		shop.add_option("Protein Powder", 3, 11);
-		shop.add_option("10 Skulls", 1, 12);
+		shop.add_option("Protein Powder", true, 3, 11);
+		shop.add_option("10 Skulls", false, 1, 12);
 	}
-	shop.add_option("Leave", 1, 15);
-	shop.draw(option*2-1);
+	shop.add_option("Leave", true, 1, 15);
+	shop.draw();
 	while (true) {
 		int ch = getch();
 		if (ch == DOWN || ch == UP) {
-			shop.actor_control(ch, option);
+			shop.change(ch, option);
 		}
 		else if (ch == ENTER) {
 			if (option == 1 && cash >= 50) {
@@ -137,14 +137,13 @@ void shop_menu(vector<shared_ptr<Hero>> &v, int &cash, int &bounty, bool &k) {
 
 void party_menu(vector<shared_ptr<Hero>> &v) {
 	Menu list;
-	list.add_option("Party");
+	list.add_option("Party", false);
 	for (int i = 0; i < v.size(); i++) {
-		list.add_option(v.at(i)->name, 1, i*3+5);
-		list.add_option(v.at(i)->print(), 1, i*3+6);
+		list.add_option(v.at(i)->name,    false, 1, i*3+5);
+		list.add_option(v.at(i)->print(), false, 1, i*3+6);
 	}
-	list.add_option("Exit", 1, 19);
+	list.add_option("Exit", true, 1, 19);
 	list.draw();
-	mvaddch(19, 8, '>');
 	while (true) {
 		int ch = getch();
 		usleep(1'000'000/MAX_FPS);
@@ -207,6 +206,9 @@ vector<shared_ptr<Hero>> load_party(string file="heroes.txt") {
 }
 
 int main() {
+	//Bridges *bridges = new Bridges(999, "kcarlis", "702469941191");
+	//bridges->setTitle("RPG Turn Order");
+
 	turn_on_ncurses();
 	turn_off_ncurses();
 	turn_on_ncurses();
@@ -227,16 +229,15 @@ int main() {
 	vector<shared_ptr<Monster>> villains;
 
 	Menu select;
-	select.add_option("Game Title", 5);
-	select.add_option("New Game");
-	select.add_option("Load Game");
-	select.add_option("Quit");
-	select.draw(option);
-
+	select.add_option("Arcane Solstice", false, 5);
+	select.add_option("New Game", true);
+	select.add_option("Load Game", true);
+	select.add_option("Quit", true);
+	select.draw();
 	while (true) {
 		ch = getch();
 		if (ch == DOWN || ch == UP) {
-			select.control(ch, option);
+			select.change(ch, option);
 		}
 		usleep(1'000'000/MAX_FPS);
 		if (ch == ENTER) {
@@ -261,22 +262,26 @@ int main() {
 		if (!in) save = false;
 		in.close();
 	}
+	if (option == 3) {
+		turn_off_ncurses();
+		exit(EXIT_SUCCESS);
+	}
 	if (option == 1 || !save || heroes.size() == 0) {
 		heroes.clear();
 		option = 1;
 		select.change_option(0, "Choose your Wizards", 1);
-		select.change_option(1, "Frost Wizard", 2);
-		select.change_option(2, "Earth Wizard", 3);
-		select.change_option(3, "Light Wizard", 4);
-		select.add_option("Fire Wizard", 5);
-		select.add_option("Arcane Wizard", 6);
+		select.change_option(1, "Frost Wizard",  2);
+		select.change_option(2, "Earth Wizard",  3);
+		select.change_option(3, "Light Wizard",  4);
+		select.add_option("Fire Wizard",   true, 5);
+		select.add_option("Arcane Wizard", true, 6);
 		select.draw(option);
 
 		int h = 0;
 		while(h < 4) {
 			ch = getch();
 			if (ch == DOWN || ch == UP) {
-				select.control(ch, option);
+				select.change(ch, option);
 			}
 			usleep(1'000'000/MAX_FPS);
 			if (ch == ENTER) {
@@ -296,221 +301,245 @@ int main() {
 					heroes.push_back(make_shared<FireWizard>(name));
 				else
 					heroes.push_back(make_shared<ArcaneWizard>(name));
-				select.draw(option);
+				select.draw(true, option);
 			}
-			}
-			map.init_map();
 		}
-		else if (option == 3) {
-			turn_off_ncurses();
-			exit(EXIT_SUCCESS);
-		}
+		map.init_map();
+	}
 
-		while (true) {
-			ch = getch(); // Wait for user input, with TIMEOUT delay
-			if (ch == ERR) {;}
-			else if (ch == DOWN || ch == UP || ch == LEFT || ch == RIGHT)
-				map.control(ch, x, y);
-			else if (ch == 'q' || ch == 'Q') {
-				Menu start;
-				start.add_option("Main Menu");
-				start.add_option("Continue");
-				start.add_option("Party");
-				start.add_option("Save");
-				start.add_option("Quit");
-				option = 1;
-				start.draw(option);
-				while(true) {
-					int ch = getch();
-					if (ch == DOWN || ch == UP) {
-						start.control(ch, option);
+	while (true) {
+		ch = getch(); // Wait for user input, with TIMEOUT delay
+		if (ch == ERR) {;}
+		else if (ch == DOWN || ch == UP || ch == LEFT || ch == RIGHT)
+			map.control(ch, x, y);
+		else if (ch == 'q' || ch == 'Q') {
+			Menu start;
+			start.add_option("Main Menu", false);
+			start.add_option("Continue", true);
+			start.add_option("Party", true);
+			start.add_option("Save", true);
+			start.add_option("Quit", true);
+			option = 1;
+			start.draw();
+			while(true) {
+				int ch = getch();
+				if (ch == DOWN || ch == UP) {
+					start.change(ch, option);
+				}
+				usleep(1'000'000/MAX_FPS);
+				if (ch == ENTER) {
+					if (option == 1)
+						break;
+					if (option == 2) {
+						party_menu(heroes);
+						start.draw(option);
 					}
-					usleep(1'000'000/MAX_FPS);
-					if (ch == ENTER) {
-						if (option == 1)
-							break;
-						if (option == 2) {
-							party_menu(heroes);
-							start.draw(option);
-						}
-						else if (option == 3) {
-							map.save();
-							save_party(heroes);
-							ofstream out;
-							out.open("save.txt");
-							out << money << '\t' << skulls << '\t' << key << '\t' << x << '\t' << y;
-							out.close();
-							break;
+					else if (option == 3) {
+						map.save();
+						save_party(heroes);
+						ofstream out;
+						out.open("save.txt");
+						out << money << '\t' << skulls << '\t' << key << '\t' << x << '\t' << y;
+						out.close();
+						break;
+					}
+					else {
+						turn_off_ncurses();
+						exit(EXIT_SUCCESS);
+					}
+				}
+			}
+			old_x -= 1;
+		}
+		if (x != old_x || y != old_y) {
+			if (map.getTile(x,y) == Map::TREASURE) {
+				map.setTile(x,y,Map::OPEN);
+				money += 10;
+			}
+			if (map.getTile(x,y) == Map::GATE) {
+				if (key)
+					map.setTile(x,y,Map::OPEN);
+				else {
+					x = old_x;
+					y = old_y;
+				}
+			}
+			if (map.getTile(x,y) == Map::SHOP) {
+				shop_menu(heroes, money, skulls, key);
+				x = old_x;
+				y = old_y;
+			}
+			if (map.getTile(x,y) == Map::WATER || map.getTile(x,y) == Map::WALL) {
+				x = old_x;
+				y = old_y;
+			}
+			else if (map.getTile(x,y) == Map::MONSTER) {
+				battle = true;
+				map.setTile(x,y,Map::OPEN);
+			}
+			else if (map.getTile(x,y) == Map::BOSS) {
+				boss = true;
+				battle = true;
+				map.setTile(x,y,Map::OPEN);
+			}
+			else {
+				map.draw(x,y);
+				mvprintw(DISPLAY+1,0,"X: %i Y: %i\n",x,y);
+				mvprintw(DISPLAY+2,0,"Money: %i\n",money);
+				mvprintw(DISPLAY+3,0,"Skulls: %i\n",skulls);
+				refresh();
+				old_x = x;
+				old_y = y;
+			}
+		}
+		usleep(1'000'000/MAX_FPS);
+		if (battle) {
+			vector<shared_ptr<Hero>> heros;
+			option = 1;
+			if (boss) {
+				for (int i = 0; i < 2; i++)
+					villains.push_back(make_shared<GrimmyGoblim>("GrimmyGoblim" + to_string(i+1), 
+								rand()%5, rand()%5, rand()%12));
+				villains.push_back(make_shared<SunGuy>("SrSun", rand()%12, rand()%5, rand()%42));
+			}
+			else {
+				if (money > 99 && (rand()%4 == 0)) {
+						villains.push_back(make_shared<DangerousDragon>("DangerousDragon", 
+									rand()%4, rand()%4, rand()%10));
+						villains.push_back(make_shared<SkinnySkeleton>("SkinnySkeleton1",
+									rand()%5, rand()%3, rand()%10));
+						villains.push_back(make_shared<SkinnySkeleton>("SkinnySkeleton2",
+									rand()%5, rand()%3, rand()%10));
+				}
+				if (villains.empty() && skulls > 10 && rand() % 4) {
+					villains.push_back(make_shared<BashfulBeast>("BashfulBeast1",
+								rand()%4, rand()%4, rand()%12));
+					villains.push_back(make_shared<BashfulBeast>("BashfulBeast2",
+								rand()%4, rand()%4, rand()%12));
+				}
+				if (villains.size() < 3) {
+					int skeles = 1, gobs = 1;
+					for (int i = rand()%3+3-villains.size(); i > 0; i--) {
+						if (rand()%2 == 0) {
+							villains.push_back(make_shared<GrimmyGoblim>("GrimmyGoblim" + to_string(gobs),
+										rand()%5, rand()%5, rand()%12));
+							gobs++;
 						}
 						else {
-							turn_off_ncurses();
-							exit(EXIT_SUCCESS);
+							villains.push_back(make_shared<SkinnySkeleton>("SkinnySkeleton" + to_string(skeles),
+										rand()%5, rand()%3, rand()%10));
+							skeles++;
 						}
 					}
 				}
-				old_x -= 1;
 			}
-			if (x != old_x || y != old_y) {
-				if (map.getTile(x,y) == Map::TREASURE) {
-					map.setTile(x,y,Map::OPEN);
-					money += 10;
-				}
-				if (map.getTile(x,y) == Map::GATE) {
-					if (key)
-						map.setTile(x,y,Map::OPEN);
-					else {
-						x = old_x;
-						y = old_y;
-					}
-				}
-				if (map.getTile(x,y) == Map::SHOP) {
-					shop_menu(heroes, money, skulls, key);
-					x = old_x;
-					y = old_y;
-				}
-				if (map.getTile(x,y) == Map::WATER || map.getTile(x,y) == Map::WALL) {
-					x = old_x;
-					y = old_y;
-				}
-				else if (map.getTile(x,y) == Map::MONSTER) {
-					battle = true;
-					map.setTile(x,y,Map::OPEN);
-				}
-				else if (map.getTile(x,y) == Map::BOSS) {
-					boss = true;
-					battle = true;
-					map.setTile(x,y,Map::OPEN);
-				}
-				else {
-					map.draw(x,y);
-					mvprintw(DISPLAY+1,0,"X: %i Y: %i\n",x,y);
-					mvprintw(DISPLAY+2,0,"Money: %i\n",money);
-					mvprintw(DISPLAY+3,0,"Skulls: %i\n",skulls);
-					refresh();
-					old_x = x;
-					old_y = y;
-				}
+			CircSLelement<shared_ptr<Actor>> *head = nullptr;
+			CircSLelement<shared_ptr<Actor>> *curr;
+			for (auto h: heroes) {
+				head = insert_actor(head, h);
+				heros.push_back(h);
 			}
-			usleep(1'000'000/MAX_FPS);
-			if (battle) {
-				vector<shared_ptr<Hero>> heros;
+			for (auto v: villains)
+				head = insert_actor(head, v);
+			//visualize(head, heroes, bridges);
+			skulls += rand() % (villains.size() - 1) + 1;
+			curr = head;
+			int rounds = 0;
+			while (battle) {
+				bool end_turn = false;
 				option = 1;
-				if (boss) {
-					for (int i = 0; i < 2; i++)
-						villains.push_back(make_shared<GrimmyGoblim>("GrimmyGoblim" + to_string(i+1), rand()%5, rand()%5, rand()%12));
-
-					villains.push_back(make_shared<SunGuy>("SrSun", rand()%12, rand()%5, rand()%42));
+				vector<shared_ptr<Hero>>::iterator it;
+				it = find(heros.begin(), heros.end(), curr->getValue());
+				if (it != heros.end()) {
+					shared_ptr<Hero> hero = heros.at(it-heros.begin());
+					while (!end_turn && hero->GetHP()) {
+						fight_menu(hero, option);
+						if (option == 1) {
+							while (!end_turn) {
+								actor_select(villains, option);
+								if (option-1 < villains.size())
+									end_turn = hero->attack(villains.at(option-1));
+								else {
+									option = 1;
+									break;
+								}
+							}
+						}
+						else if (option == 2) {
+							if (hero->move1 == "Ice Lance" || hero->move1 == "Arcane Missiles") {
+								option = 1;
+								actor_select(villains, option);
+								if (option < villains.size()+1)
+									end_turn = hero->use_move1(villains.at(option-1));
+								option = 2;
+							}
+							else
+								end_turn = hero->use_move1();
+							if (!end_turn)
+								end_turn = hero->use_move1(villains);
+						}
+						else if (option == 3) {
+							end_turn = hero->use_move2();
+							if (!end_turn)
+								end_turn = hero->use_move2(heroes);
+							if (hero->move2 == "Snowfort") {
+								option = 1;
+								actor_select(heroes, option);
+								if (option < villains.size()+1)
+									end_turn = hero->use_move2(heroes.at(option-1));
+								option = 3;
+							}
+						}
+						else if (option == 4) {
+							end_turn = true;
+						}
+						else if (option == 5) {
+							party_menu(heroes);
+						}
+					}
 				}
 				else {
-					for (int i = 0; i < 3+rand()%2; i++)
-						villains.push_back(make_shared<GrimmyGoblim>("GrimmyGoblim" + to_string(i+1), rand()%5, rand()%5, rand()%12));
+					while(!end_turn) {
+						end_turn = curr->getValue()->attack(heros.at(rand()%heros.size()));
+					}
 				}
-				CircSLelement<shared_ptr<Actor>> *head = nullptr;
-				CircSLelement<shared_ptr<Actor>> *curr;
-				for (auto h: heroes) {
-					head = insert_actor(head, h);
-					heros.push_back(h);
+				curr = curr->getNext();
+				for (int i =  0; i < villains.size(); i++) {
+					if (villains.at(i)->GetHP() < 1) {
+						if (curr->getValue() == villains.at(i))
+							curr = curr->getNext();
+						head = remove_actor(head, villains.at(i));
+						villains.erase(villains.begin()+i);
+					}
 				}
-				for (auto v: villains)
-					head = insert_actor(head, v);
-				skulls += 1 + rand() % (villains.size() - 1);
-				curr = head;
-				int rounds = 0;
-				while (battle) {
-					bool end_turn = false;
-					option = 1;
-					vector<shared_ptr<Hero>>::iterator it;
-					it = find(heros.begin(), heros.end(), curr->getValue());
-					if (it != heros.end()) {
-						shared_ptr<Hero> hero = heros.at(it-heros.begin());
-						while (!end_turn && hero->GetHP()) {
-							fight_menu(hero, option);
-							if (option == 1) {
-								while (!end_turn) {
-									actor_select(villains, option);
-									if (option-1 < villains.size())
-										end_turn = hero->attack(villains.at(option-1));
-									else {
-										option = 1;
-										break;
-									}
-								}
-							}
-							else if (option == 2) {
-								if (hero->move1 == "Ice Lance" || hero->move1 == "Arcane Missiles") {
-									option = 1;
-									actor_select(villains, option);
-									if (option < villains.size()+1)
-										end_turn = hero->use_move1(villains.at(option-1));
-									option = 2;
-								}
-								else
-									end_turn = hero->use_move1();
-								if (!end_turn)
-									end_turn = hero->use_move1(villains);
-							}
-							else if (option == 3) {
-								end_turn = hero->use_move2();
-								if (!end_turn)
-									end_turn = hero->use_move2(heroes);
-								if (hero->move2 == "Snowfort") {
-									option = 1;
-									actor_select(heroes, option);
-									if (option < villains.size()+1)
-										end_turn = hero->use_move2(heroes.at(option-1));
-									option = 3;
-								}
-							}
-							else if (option == 4) {
-								end_turn = true;
-							}
-							else if (option == 5) {
-								party_menu(heroes);
-							}
-						}
+				for (int i = 0; i < heros.size(); i++) {
+					if (heros.at(i)->GetHP() == 0) {
+						if (curr->getValue() == heros.at(i))
+							curr = curr->getNext();
+						head = remove_actor(head, heros.at(i));
+						heros.erase(heros.begin() + i);
 					}
-					else {
-						while(!end_turn) {
-							end_turn = curr->getValue()->attack(heros.at(rand()%heros.size()));
-						}
+				}
+				if (villains.empty()) {
+					for (auto h: heroes) {
+						h->hp.regen();
+						h->mana.regen();
 					}
-					curr = curr->getNext();
-					for (int i =  0; i < villains.size(); i++) {
-						if (villains.at(i)->GetHP() < 1) {
-							if (curr->getValue() == villains.at(i))
-								curr = curr->getNext();
-							head = remove_actor(head, villains.at(i));
-							villains.erase(villains.begin()+i);
-						}
-					}
-					for (int i = 0; i < heros.size(); i++) {
-						if (heros.at(i)->GetHP() == 0) {
-							if (curr->getValue() == heros.at(i))
-								curr = curr->getNext();
-							head = remove_actor(head, heros.at(i));
-							heros.erase(heros.begin() + i);
-						}
-					}
-					if (villains.empty()) {
-						for (auto h: heroes) {
-							h->hp.regen();
-							h->mana.regen();
-						}
-						battle = false;
-						if (boss) {
-							turn_off_ncurses();
-							cout << "YOU WIN" << endl;
-							exit(0);
-						}
-					}
-					if(heros.empty()) {
+					battle = false;
+					if (boss) {
 						turn_off_ncurses();
-						cout << "YOU LOSE" << endl;
+						cout << "YOU WIN" << endl;
 						exit(0);
 					}
 				}
-				villains.clear();
+				if(heros.empty()) {
+					turn_off_ncurses();
+					cout << "YOU LOSE" << endl;
+					exit(0);
+				}
 			}
+			villains.clear();
 		}
-		turn_off_ncurses();
 	}
+	turn_off_ncurses();
+}

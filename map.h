@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <functional>
 #include <random>
 #include <cstdarg>
 #include <ncurses.h>
@@ -200,30 +201,32 @@ class Map {
 
 class Menu {
 	vector<string> options;
+	vector<int> selectable;
 	vector<int> colors;
 	vector<int> rows;
 	public:
-	void add_option(string opt, int color=1) {
+	void add_option(string opt, bool select, int color=1) {
 		options.push_back(opt);
 		colors.push_back(color);
 		rows.push_back(options.size()*3-1);
+		if (select)
+			selectable.push_back(rows.size()-1);
 	}
-	void add_option(string opt, int color, int row) {
+	void add_option(string opt, bool select, int color, int row) {
 		options.push_back(opt);
 		colors.push_back(color);
 		rows.push_back(row);
+		if (select)
+			selectable.push_back(rows.size()-1);
 	}
 	void change_option(int opt, const char* text) {
 		options.at(opt) = text;
 	}
 	void change_option(int opt, const char* text, int color) {
 		options.at(opt) = text;
-		change_color(opt, color);
-	}
-	void change_color(int opt, int color) {
 		colors.at(opt) = color;
 	}
-	void draw(int option=-1, int selectable=-1) const {
+	void draw(bool select=true, int option=1) const {
 		clear();
 		for (size_t i = 0; i < DISPLAY; i++) {
 			mvaddch(0,i+1,'_');
@@ -238,22 +241,16 @@ class Menu {
 				mvprintw(rows.at(i), (DISPLAY-options.at(i).length())/2+1, options.at(i).c_str());
 				attroff(COLOR_PAIR(colors.at(i)));
 			}
-			if (options.size() > 1 && option != -1) {
-				if (selectable == -1)
-					selectable = options.size() - 1;
-				int i = options.size() - selectable + option - 1;
-				mvaddch(rows.at(i), (DISPLAY-options.at(i).length())/2, '>');
-			}
+			if (select)
+				mvaddch(rows.at(selectable.at(option-1)), (DISPLAY-options.at(selectable.at(option-1)).length())/2, '>');
 		}
 		refresh();
 	}
-	void control(int ch, int &option, int selectable=-1) {
-		if (selectable == -1)
-			selectable = options.size() - 1;
-		int i = options.size() - selectable + option - 1;
+	void change(int ch, int &option) {
+		int i = selectable.at(option-1);
 		if (ch == DOWN) {
 			mvaddch(rows.at(i), (DISPLAY-options.at(i).length())/2, ' ');
-			if (option < selectable)
+			if (option < selectable.size())
 				option++;
 			else
 				option = 1;
@@ -263,29 +260,10 @@ class Menu {
 			if (option > 1)
 				option--;
 			else
-				option = selectable;
+				option = selectable.size();
 		}
-		i = options.size() - selectable + option - 1;
+		i = selectable.at(option-1);
 		mvaddch(rows.at(i), (DISPLAY-options.at(i).length())/2, '>');
-		refresh();
-	}
-
-	void actor_control(int ch, int &option) {
-		if (ch == DOWN) {
-			mvaddch(rows.at(option*2-1), (DISPLAY-options.at(option*2-1).length())/2, ' ');
-			if (option < options.size()/2)
-				option++;
-			else
-				option = 1;
-		}
-		else if (ch == UP) {
-			mvaddch(rows.at(option*2-1), (DISPLAY-options.at(option*2-1).length())/2, ' ');
-			if (option > 1)
-				option--;
-			else
-				option = options.size()/2;
-		}
-		mvaddch(rows.at(option*2-1), (DISPLAY-options.at(option*2-1).length())/2, '>');
 		refresh();
 	}
 };

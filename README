@@ -9,6 +9,18 @@
 
 ==============================
 
+Requirements
+~~~~~~~~~~~~
+Bridges UNCC Client
+https://bridgesuncc.github.io/
+
+Ncurses
+~sudo apt-get install libncurses5-dev libncursesw5-dev
+
+lcurl
+~sudo apt-get install libcurl4-openssl-dev
+~~~~~~~~~~~~
+
 Turn based RPG - CSCI 41 Version
 
 One letter grade is available for each of these bullet points implemented. If

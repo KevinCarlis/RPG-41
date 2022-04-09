@@ -56,3 +56,40 @@ CircSLelement<shared_ptr<Actor>>* remove_actor(CircSLelement<shared_ptr<Actor>> 
 	prev->setNext(curr->getNext());
 	return head;
 }
+
+void visualize(CircSLelement<shared_ptr<Actor>> *head, vector<shared_ptr<Hero>> &h, Bridges *bridges) {
+	if (!head)
+		return;
+	CircSLelement<shared_ptr<Actor>> *curr = head;
+	shared_ptr<Actor> a;
+	do {
+		a = curr->getValue();
+		if (find(h.begin(), h.end(), a) != h.end()) {
+			curr->getVisualizer()->setShape(Shape::DIAMOND);
+			if (a->color == 2)
+				curr->getVisualizer()->setColor("cyan");
+			else if (a->color == 3)
+				curr->getVisualizer()->setColor("green");
+			else if (a->color == 4)
+				curr->getVisualizer()->setColor("yellow");
+			else if (a->color == 5)
+				curr->getVisualizer()->setColor("red");
+			else if (a->color == 6)
+				curr->getVisualizer()->setColor("magenta");
+			else 
+				curr->getVisualizer()->setColor("white");
+		}
+		else {
+			if (a->name.find("Skeleton") != string::npos) {
+				curr->getVisualizer()->setColor("white");
+				curr->getVisualizer()->setShape(Shape::CROSS);
+			}
+			else {
+				curr->getVisualizer()->setColor("black");
+			}
+		}
+		curr = curr->getNext();
+	} while(curr != head);
+	bridges->setDataStructure(head);
+	bridges->visualize();
+}

@@ -1,4 +1,4 @@
-Arcane	Ted	111	0	51	
-Fire	Frank	90	0	39	
-Light	Jeff	137	0	105	
-Frost	Liam	70	0	29	
+Frost	Jeff	105	5	108	
+Earth	Heman	120	2	95	
+Light	Brite	140	10	105	
+Fire	Blaze	90	35	112	

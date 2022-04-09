@@ -281,6 +281,20 @@ int main() {
 		}
 		if (!in) save = false;
 		in.close();
+		if (!save) {
+			Menu text;
+			text.add_option("No Save Found", false, 1, 7);
+			text.add_option("Starting" , false, 1, 10);
+			text.add_option("New Game" , false, 1, 11);
+			text.draw(false);
+			while (true) {
+				int ch = getch();
+				usleep(1'000'000/MAX_FPS);
+				if (ch != ERR) {
+					break;
+				}
+			}
+		}
 	}
 	if (option == 3) {
 		turn_off_ncurses();

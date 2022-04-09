@@ -109,11 +109,11 @@ class Actor {
 			return hp.GetTemp();
 		}
 		template <typename T>
-			bool attack(const shared_ptr<T> &other) const {
+			string attack(const shared_ptr<T> &other) const {
 				if (other->GetHP() <= 0)
-					return false;
+					return "FAIL: " + other->name + " is dead";
 				other->damage(power);
-				return true;
+				return other->name + "\ntook " + to_string(power) + " damage!";
 			}
 		void damage(int d) {
 			hp -= d;
@@ -191,23 +191,23 @@ class Hero: public Actor {
 		virtual string print() override {
 			return Actor::print() + " MP:" + to_string(mana.GetTotal());
 		}
-		virtual bool use_move1() {
-			return false;
+		virtual string use_move1() {
+			return "FAIL: No move";
 		}
-		virtual bool use_move1(shared_ptr<Monster> &enemy) {
-			return false;
+		virtual string use_move1(shared_ptr<Monster> &enemy) {
+			return "FAIL: No move";
 		}
-		virtual bool use_move1(vector<shared_ptr<Monster>> &enemies) {
-			return false;
+		virtual string use_move1(vector<shared_ptr<Monster>> &enemies) {
+			return "FAIL: No move";
 		}
-		virtual bool use_move2() {
-			return false;
+		virtual string use_move2() {
+			return "FAIL: No move";
 		}
-		virtual bool use_move2(shared_ptr<Hero> &ally) {
-			return false;
+		virtual string use_move2(shared_ptr<Hero> &ally) {
+			return "FAIL: No move";
 		}
-		virtual bool use_move2(vector<shared_ptr<Hero>> &allies) {
-			return false;
+		virtual string use_move2(vector<shared_ptr<Hero>> &allies) {
+			return "FAIL: No move";
 		}
 };
 class FrostWizard: public Hero {
@@ -222,18 +222,18 @@ class FrostWizard: public Hero {
 			move1 = "Ice Lance";
 			move2 = "Snowfort";
 		}
-		virtual bool use_move1(shared_ptr<Monster> &enemy) override {
-			if (mana < 29) return false;
+		virtual string use_move1(shared_ptr<Monster> &enemy) override {
+			if (mana < 29) return "FAIL: Not enough mana.";
 			mana -= 29;
 			enemy->damage(45);
-			return true;
+			return enemy->name + "\n took 45 damage!";
 		}
-		virtual bool use_move2(shared_ptr<Hero> &ally) override {
+		virtual string use_move2(shared_ptr<Hero> &ally) override {
 			if (mana < 22)
-				return false;
+				return "FAIL: Not enough mana.";
 			mana -= 22;
 			ally->hp.AddTemp(35);
-			return true;
+			return ally->name + "\n gained 35 shield";
 		}
 };
 class EarthWizard: public Hero {
@@ -248,19 +248,19 @@ class EarthWizard: public Hero {
 			move1 = "Boulder Barrage";
 			move2 = "Rock Wall";
 		}
-		virtual bool use_move1(vector<shared_ptr<Monster>> &enemies) override {
-			if (mana < 25) return false;
+		virtual string use_move1(vector<shared_ptr<Monster>> &enemies) override {
+			if (mana < 25) "FAIL: Not enough mana.";
 			mana -= 25;
 			for (auto m : enemies)
-				m->damage(15);
-			return true;
+				m->damage(19);
+			return "All enemies\ntook 19 damage!";
 		}
-		virtual bool use_move2() override {
+		virtual string use_move2() override {
 			if (mana < 20)
-				return false;
+				return "FAIL: Not enough mana.";
 			mana -= 20;
 			hp.AddTemp(45);
-			return true;
+			return name + "\ngained 45 shield.";
 		}
 };
 class LightWizard: public Hero {
@@ -275,20 +275,20 @@ class LightWizard: public Hero {
 			move1 = "Self Lighteous";
 			move2 = "Healing Light";
 		}
-		virtual bool use_move1() override {
-			if (mana < 30) return false;
+		virtual string use_move1() override {
+			if (mana < 30) "FAIL: Not enough mana.";
 			mana -= 30;
 			hp += 40;
-			return true;
+			return name + " \ngained 40HP.";
 		}
-		virtual bool use_move2(vector<shared_ptr<Hero>> &allies) override {
+		virtual string use_move2(vector<shared_ptr<Hero>> &allies) override {
 			if (mana < 20)
-				return false;
+				return "FAIL: Not enough mana.";
 			mana -= 20;
 			for (auto h : allies)
 				if (h->name != name && h->GetHP() != GetHP())
 					h->hp += 20;
-			return true;
+			return "Allies\nhealed 20HP.";
 		}
 };
 class FireWizard: public Hero {
@@ -303,20 +303,20 @@ class FireWizard: public Hero {
 			move1 = "Firestorm";
 			move2 = "Smokescreen";
 		}
-		virtual bool use_move1(vector<shared_ptr<Monster>> &enemies) override {
-			if (mana < 32) return false;
+		virtual string use_move1(vector<shared_ptr<Monster>> &enemies) override {
+			if (mana < 32) return "FAIL: Not enough mana.";
 			mana -= 32;
 			for (auto m : enemies)
 				m->damage(22);
-			return true;
+			return "All enemies\ntook 22 damage!";
 		}
-		virtual bool use_move2(vector<shared_ptr<Hero>> &allies) override {
+		virtual string use_move2(vector<shared_ptr<Hero>> &allies) override {
 			if (mana < 22)
-				return false;
+				return "FAIL: Not enough mana.";
 			mana -= 22;
 			for (auto h: allies)
 				h->hp.AddTemp(12);
-			return true;
+			return "All allies\ngained 12 shield.";
 		}
 };
 class ArcaneWizard: public Hero {
@@ -331,19 +331,18 @@ class ArcaneWizard: public Hero {
 			move1 = "Arcane Missiles";
 			move2 = "Mana Surge";
 		}
-		virtual bool use_move1(shared_ptr<Monster> &enemy) override {
-			if (mana < 30) return false;
+		virtual string use_move1(shared_ptr<Monster> &enemy) override {
+			if (mana < 30) return "FAIL: Not enough mana.";
 			mana -= 30;
 			enemy->damage(40);
-			return true;
+			return enemy->name + "\ntook 40 damage!";
 		}
-		virtual bool use_move2(vector<shared_ptr<Hero>> &allies) override {
-			if (mana < 20)
-				return false;
+		virtual string use_move2(vector<shared_ptr<Hero>> &allies) override {
+			if (mana < 20) return "FAIL: Not enough mana.";
 			mana -= 20;
 			for (auto h : allies)
 				if (h->name != name && h->GetHP() != GetHP())
 					h->mana.AddTemp(15);
-			return true;
+			return "All allies\ngained 25 mana.";
 		}
 };

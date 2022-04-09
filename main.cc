@@ -226,7 +226,7 @@ vector<shared_ptr<Hero>> load_party(string file="heroes.txt") {
 }
 
 int main() {
-	//Bridges *bridges = new Bridges(999, "kcarlis", "702469941191");
+	//Bridges *bridges = new Bridges(999, "username", "APIKEY");
 	//bridges->setTitle("RPG Turn Order");
 
 	turn_on_ncurses();

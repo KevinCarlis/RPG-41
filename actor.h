@@ -135,7 +135,7 @@ class SkinnySkeleton : public Monster {
 	public:
 		SkinnySkeleton(string userName="SkinnySkeleton", int bonusSpeed=0, int bonusPower=0, int bonusHP=0) {			        name = userName;
 			speed = 14 + bonusSpeed;
-			power = 8 + bonusPower;
+			power = 7 + bonusPower;
 			SetHP(45+bonusHP);
 		}
 };
@@ -144,7 +144,7 @@ class GrimmyGoblim : public Monster {
 		GrimmyGoblim(string userName="GrimmyGoblim", int bonusSpeed=0, int bonusPower=0, int bonusHP=0) {
 			name = userName;
 			speed = 14 + bonusSpeed;
-			power = 12 + bonusPower;
+			power = 10 + bonusPower;
 			SetHP(60+bonusHP);
 		}
 };
@@ -153,7 +153,7 @@ class BashfulBeast : public Monster {
 		BashfulBeast(string userName="BashfulBeast", int bonusSpeed=0, int bonusPower=0, int bonusHP=0) {
 			name = userName;
 			speed = 16 + bonusSpeed;
-			power = 18 + bonusPower;
+			power = 14 + bonusPower;
 			SetHP(150+bonusHP);
 		}
 };
@@ -162,7 +162,7 @@ class DangerousDragon : public Monster {
 		DangerousDragon(string userName="DangerousDragon", int bonusSpeed=0, int bonusPower=0, int bonusHP=0) {
 			name = userName;
 			speed = 15 + bonusSpeed;
-			power = 20 + bonusPower;
+			power = 18 + bonusPower;
 			SetHP(220+bonusHP);
 		}
 };

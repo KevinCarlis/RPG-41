@@ -1,4 +1,4 @@
-Frost	Jeff	105	5	108	
-Earth	Heman	120	2	95	
-Light	Brite	140	10	105	
-Fire	Blaze	90	35	112	
+Frost	Jeff	105	0	89	
+Earth	Heman	120	0	79	
+Light	Brite	140	0	105	
+Fire	Blaze	90	25	11	

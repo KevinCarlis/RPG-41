@@ -159,8 +159,10 @@ void text_menu(shared_ptr<T> h, string &s) {
 	text.add_option(h->name,    false, h->color);
 	text.add_option(h->print(), false, 1, 3);
 	text.add_option(s.substr(0, s.find('\n')), false, 1, 10);
-	s.erase(0, s.find('\n')+1);
-	text.add_option(s, false, 1, 11);
+	if (s.find('\n') != string::npos) {
+		s.erase(0, s.find('\n')+1);
+		text.add_option(s, false, 1, 11);
+	}
 	text.draw(false);
 	while (true) {
 		int ch = getch();
@@ -293,7 +295,7 @@ int main() {
 		select.change_option(3, "Light Wizard",  4);
 		select.add_option("Fire Wizard",   true, 5);
 		select.add_option("Arcane Wizard", true, 6);
-		select.draw(option);
+		select.draw(true, option);
 
 		int h = 0;
 		while(h < 4) {
@@ -350,7 +352,7 @@ int main() {
 						break;
 					if (option == 2) {
 						party_menu(heroes);
-						start.draw(option);
+						start.draw(true, option);
 					}
 					else if (option == 3) {
 						map.save();

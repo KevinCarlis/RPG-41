@@ -242,7 +242,8 @@ class Menu {
 				attroff(COLOR_PAIR(colors.at(i)));
 			}
 			if (select)
-				mvaddch(rows.at(selectable.at(option-1)), (DISPLAY-options.at(selectable.at(option-1)).length())/2, '>');
+				mvaddch(rows.at(selectable.at(option-1)), 
+						(DISPLAY-options.at(selectable.at(option-1)).length())/2, '>');
 		}
 		refresh();
 	}

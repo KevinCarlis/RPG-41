@@ -11,7 +11,7 @@ https://bridgesuncc.github.io/
 
 Ncurses
 ```
-~sudo apt-get install libncurses5-dev libncursesw5-dev
+$sudo apt-get install libncurses5-dev libncursesw5-dev
 ```
 
 lcurl

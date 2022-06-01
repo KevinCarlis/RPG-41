@@ -18,7 +18,7 @@ lcurl
 ```
 sudo apt-get install libcurl4-openssl-dev
 ```
-~~~~~~~~~~~~
+
 
 Turn based RPG - CSCI 41 Version
 
